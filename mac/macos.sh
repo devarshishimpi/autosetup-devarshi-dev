@@ -9,8 +9,12 @@ NC='\033[0m' # No Color
 # Function to ask for sudo password and run a command with sudo
 run_with_sudo() {
     echo -e "${YELLOW}Please enter your sudo password to continue. ${NC}"
-    sudo touch test.txt
-    sudo rm -rf test.txt
+    if sudo -v; then
+        echo -e "${GREEN}Sudo access granted.${NC}"
+    else
+        echo -e "${RED}Failed to get sudo access. Exiting.${NC}"
+        exit 1
+    fi
 }
 
 # Ask the user for the sudo password and run the commands with sudo
@@ -37,6 +41,12 @@ install_homebrew() {
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
         echo -e "${GREEN}Installing Homebrew...${NC}"
         NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}Homebrew installation successful.${NC}"
+        else
+            echo -e "${RED}Failed to install Homebrew. Exiting.${NC}"
+            exit 1
+        fi
     else
         echo -e "${RED}Skipping Homebrew installation...${NC}"
     fi
@@ -50,7 +60,7 @@ else
 fi
 
 # Check if mongodb/brew is tapped and update it
-if [ "$(brew tap | grep 'mongodb/brew')" ]; then
+if brew tap | grep -q 'mongodb/brew'; then
     echo -e "${GREEN}mongodb/brew tap is already added.${NC}"
 else
     local tap_choice
@@ -58,9 +68,20 @@ else
     read -r -n 3 tap_choice
     if [ "$tap_choice" = "yes" ] || [ "$tap_choice" = "y" ]; then
         brew tap mongodb/brew
-        echo -e "${GREEN}mongodb/brew tap added.${NC}"
-        echo -e "${GREEN}Updating mongodb/brew...${NC}"
-        brew update
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}mongodb/brew tap added.${NC}"
+            echo -e "${GREEN}Updating mongodb/brew...${NC}"
+            brew update
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}mongodb/brew update successful.${NC}"
+            else
+                echo -e "${RED}Failed to update mongodb/brew. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to tap mongodb/brew. Exiting.${NC}"
+            exit 1
+        fi
     else
         echo -e "${RED}Skipping mongodb/brew tap and update...${NC}"
     fi
@@ -90,10 +111,19 @@ for software in "${software_list[@]}"; do
 done
 
 # Perform the selected installations
-echo -e "${GREEN}Installing selected software...${NC}"
-for software in "${install_choices[@]}"; do
-    echo -e "${GREEN}Installing $software...${NC}"
-    brew install "$software"
-done
+if [ ${#install_choices[@]} -gt 0 ]; then
+    echo -e "${GREEN}Installing selected software...${NC}"
+    for software in "${install_choices[@]}"; do
+        echo -e "${GREEN}Installing $software...${NC}"
+        if brew install "$software"; then
+            echo -e "${GREEN}$software installation successful.${NC}"
+        else
+            echo -e "${RED}Failed to install $software. Exiting.${NC}"
+            exit 1
+        fi
+    done
+else
+    echo -e "${YELLOW}No software selected for installation.${NC}"
+fi
 
 echo -e "${GREEN}Installation complete.${NC}"
