@@ -138,7 +138,7 @@ install_cloudflare_warp() {
     read -r -n 3 choice
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
         echo -e "${GREEN}Downloading Cloudflare WARP...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/softwares/Cloudflare_WARP.zip
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Cloudflare_WARP.zip
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Cloudflare WARP downloaded successfully.${NC}"
             echo -e "${GREEN}Unzipping Cloudflare WARP...${NC}"
