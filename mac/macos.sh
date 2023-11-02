@@ -98,6 +98,7 @@ software_list=(
     "mongosh"
     "gcc"
     "wget"
+	"git"
 )
 
 # Collect user choices for software installation
@@ -115,7 +116,7 @@ if [ ${#install_choices[@]} -gt 0 ]; then
     echo -e "${GREEN}Installing selected software...${NC}"
     for software in "${install_choices[@]}"; do
         echo -e "${GREEN}Installing $software...${NC}"
-        if brew install "$software"; then
+        if brew reinstall "$software"; then
             echo -e "${GREEN}$software installation successful.${NC}"
         else
             echo -e "${RED}Failed to install $software. Exiting.${NC}"
@@ -125,5 +126,43 @@ if [ ${#install_choices[@]} -gt 0 ]; then
 else
     echo -e "${YELLOW}No software selected for installation.${NC}"
 fi
+
+# Function to download and install Cloudflare WARP
+install_cloudflare_warp() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install Cloudflare WARP? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Downloading Cloudflare WARP...${NC}"
+        curl -O http://example.com/Cloudflare_WARP.zip
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}Cloudflare WARP downloaded successfully.${NC}"
+            echo -e "${GREEN}Unzipping Cloudflare WARP...${NC}"
+            unzip Cloudflare_WARP.zip
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}Cloudflare WARP unzipped successfully.${NC}"
+                echo -e "${YELLOW}Please enter your sudo password to install Cloudflare WARP.${NC}"
+                sudo installer -pkg Cloudflare_WARP.pkg -target /
+                if [ $? -eq 0 ]; then
+                    echo -e "${GREEN}Cloudflare WARP installed successfully.${NC}"
+                else
+                    echo -e "${RED}Failed to install Cloudflare WARP. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to unzip Cloudflare WARP. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download Cloudflare WARP. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Cloudflare WARP installation...${NC}"
+    fi
+}
+
+# Install Cloudflare WARP
+install_cloudflare_warp
 
 echo -e "${GREEN}Installation complete.${NC}"
