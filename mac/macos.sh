@@ -6,6 +6,16 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
+# Function to ask for sudo password and run a command with sudo
+run_with_sudo() {
+    echo -e "${YELLOW}Please enter your sudo password to continue. ${NC}"
+    sudo touch test.txt
+    sudo rm -rf test.txt
+}
+
+# Ask the user for the sudo password and run the commands with sudo
+run_with_sudo
+
 # Function to prompt user for installation
 prompt_install() {
     local software_name="$1"
@@ -39,6 +49,23 @@ else
     install_homebrew
 fi
 
+# Check if mongodb/brew is tapped and update it
+if [ "$(brew tap | grep 'mongodb/brew')" ]; then
+    echo -e "${GREEN}mongodb/brew tap is already added.${NC}"
+else
+    local tap_choice
+    echo -e -n "${YELLOW}Do you want to tap 'mongodb/brew'? (yes/no)${NC} "
+    read -r -n 3 tap_choice
+    if [ "$tap_choice" = "yes" ] || [ "$tap_choice" = "y" ]; then
+        brew tap mongodb/brew
+        echo -e "${GREEN}mongodb/brew tap added.${NC}"
+        echo -e "${GREEN}Updating mongodb/brew...${NC}"
+        brew update
+    else
+        echo -e "${RED}Skipping mongodb/brew tap and update...${NC}"
+    fi
+fi
+
 # Define the list of software to install
 software_list=(
     "python@3.11"
@@ -46,7 +73,6 @@ software_list=(
     "doctl"
     "ca-certificates"
     "node@18"
-    "mongodb/brew"
     "mongodb-community@7.0"
     "mongosh"
     "gcc"
@@ -67,11 +93,7 @@ done
 echo -e "${GREEN}Installing selected software...${NC}"
 for software in "${install_choices[@]}"; do
     echo -e "${GREEN}Installing $software...${NC}"
-    if [ "$software" = "mongodb/brew" ]; then
-        brew tap mongodb/brew
-    else
-        brew install "$software"
-    fi
+    brew install "$software"
 done
 
 echo -e "${GREEN}Installation complete.${NC}"
