@@ -33,22 +33,26 @@ prompt_install() {
     fi
 }
 
-# Function to handle Homebrew installation
-install_homebrew() {
+# Function to handle the installation of Node.js
+install_node() {
     local choice
-    echo -e -n "${YELLOW}Do you want to install Homebrew? (yes/no)${NC} "
+    echo -e -n "${YELLOW}Do you want to install Node.js (node@18)? (yes/no)${NC} "
     read -r -n 3 choice
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing Homebrew...${NC}"
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}Homebrew installation successful.${NC}"
+        echo -e "${GREEN}Installing Node.js (node@18)...${NC}"
+        if brew reinstall node@18; then
+            echo -e "${GREEN}Node.js (node@18) installation successful.${NC}"
+
+            # Add Node.js (node@18) to the PATH and set environment variables
+            echo 'export PATH="/opt/homebrew/opt/node@18/bin:$PATH"' >> ~/.zshrc
+            export LDFLAGS="-L/opt/homebrew/opt/node@18/lib"
+            export CPPFLAGS="-I/opt/homebrew/opt/node@18/include"
         else
-            echo -e "${RED}Failed to install Homebrew. Exiting.${NC}"
+            echo -e "${RED}Failed to install Node.js (node@18). Exiting.${NC}"
             exit 1
         fi
     else
-        echo -e "${RED}Skipping Homebrew installation...${NC}"
+        echo -e "${RED}Skipping Node.js (node@18) installation...${NC}"
     fi
 }
 
@@ -98,7 +102,7 @@ software_list=(
     "mongosh"
     "gcc"
     "wget"
-	"git"
+    "git"
 )
 
 # Collect user choices for software installation
@@ -116,7 +120,7 @@ if [ ${#install_choices[@]} -gt 0 ]; then
     echo -e "${GREEN}Installing selected software...${NC}"
     for software in "${install_choices[@]}"; do
         echo -e "${GREEN}Installing $software...${NC}"
-        if brew reinstall "$software"; then
+        if brew install "$software"; then
             echo -e "${GREEN}$software installation successful.${NC}"
         else
             echo -e "${RED}Failed to install $software. Exiting.${NC}"
@@ -134,7 +138,7 @@ install_cloudflare_warp() {
     read -r -n 3 choice
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
         echo -e "${GREEN}Downloading Cloudflare WARP...${NC}"
-        curl -O http://example.com/Cloudflare_WARP.zip
+        curl -O https://autosetup-devarshi.vercel.app/softwares/Cloudflare_WARP.zip
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}Cloudflare WARP downloaded successfully.${NC}"
             echo -e "${GREEN}Unzipping Cloudflare WARP...${NC}"
@@ -145,6 +149,13 @@ install_cloudflare_warp() {
                 sudo installer -pkg Cloudflare_WARP.pkg -target /
                 if [ $? -eq 0 ]; then
                     echo -e "${GREEN}Cloudflare WARP installed successfully.${NC}"
+                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                    sudo rm -rf Cloudflare_WARP.zip Cloudflare_WARP.pkg
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}Cleanup completed.${NC}"
+                    else
+                        echo -e "${RED}Failed to delete installation files.${NC}"
+                    fi
                 else
                     echo -e "${RED}Failed to install Cloudflare WARP. Exiting.${NC}"
                     exit 1
