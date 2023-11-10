@@ -173,6 +173,48 @@ install_cloudflare_warp() {
     fi
 }
 
+# Function to download and install Atlassian Sourcetree
+install_atlassian_sourcetree() {
+    local choice
+    read -r -p "$(echo -e ${YELLOW}Do you want to install Atlassian Sourcetree? \(yes/no\)${NC}) " choice
+    choice=${choice,,} # Convert to lowercase
+    if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
+        echo -e "${GREEN}Downloading Atlassian Sourcetree...${NC}"
+        if curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Atlassian_Sourcetree.zip; then
+            echo -e "${GREEN}Atlassian Sourcetree downloaded successfully.${NC}"
+            echo -e "${GREEN}Unzipping Atlassian Sourcetree...${NC}"
+            if unzip Atlassian_Sourcetree.zip; then
+                echo -e "${GREEN}Atlassian Sourcetree unzipped successfully.${NC}"
+                echo -e "${GREEN}Installing Atlassian Sourcetree...${NC}"
+                # Copying Sourcetree.app to Applications
+                if cp -R "Sourcetree.app" "/Applications/"; then
+                    echo -e "${GREEN}Atlassian Sourcetree installed successfully.${NC}"
+                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                    if rm -rf Atlassian_Sourcetree.zip; then
+                        echo -e "${GREEN}Cleanup completed.${NC}"
+                    else
+                        echo -e "${RED}Failed to delete installation files.${NC}"
+                    fi
+                else
+                    echo -e "${RED}Failed to install Atlassian Sourcetree. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to unzip Atlassian Sourcetree. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download Atlassian Sourcetree. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Atlassian Sourcetree installation...${NC}"
+    fi
+}
+
+# Install Atlassian Sourcetree
+install_atlassian_sourcetree
+
 # Install Cloudflare WARP
 install_cloudflare_warp
 
