@@ -177,7 +177,7 @@ install_cloudflare_warp() {
 install_atlassian_sourcetree() {
     local choice
     read -r -p "$(echo -e ${YELLOW}Do you want to install Atlassian Sourcetree? \(yes/no\)${NC}) " choice
-    choice=${choice,,} # Convert to lowercase
+    choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]') # Convert to lowercase
     if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
         echo -e "${GREEN}Downloading Atlassian Sourcetree...${NC}"
         if curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Atlassian_Sourcetree.zip; then
@@ -212,10 +212,10 @@ install_atlassian_sourcetree() {
     fi
 }
 
-# Install Atlassian Sourcetree
-install_atlassian_sourcetree
-
 # Install Cloudflare WARP
 install_cloudflare_warp
+
+# Install Atlassian Sourcetree
+install_atlassian_sourcetree
 
 echo -e "${GREEN}Installation complete.${NC}"
