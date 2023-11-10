@@ -186,12 +186,18 @@ install_atlassian_sourcetree() {
             if unzip Atlassian_Sourcetree.zip; then
                 echo -e "${GREEN}Atlassian Sourcetree unzipped successfully.${NC}"
                 echo -e "${GREEN}Installing Atlassian Sourcetree...${NC}"
-                # Copying Sourcetree.app to Applications
-                if cp -R "Sourcetree.app" "/Applications/"; then
+                # Moving Sourcetree.app to Applications
+                if mv "Sourcetree.app" "/Applications/"; then
                     echo -e "${GREEN}Atlassian Sourcetree installed successfully.${NC}"
                     echo -e "${YELLOW}Cleaning up installation files...${NC}"
                     if rm -rf Atlassian_Sourcetree.zip; then
                         echo -e "${GREEN}Cleanup completed.${NC}"
+                        echo -e "${GREEN}Deleting Sourcetree.app folder from the current directory...${NC}"
+                        if rm -rf "Sourcetree.app"; then
+                            echo -e "${GREEN}Sourcetree.app folder deleted.${NC}"
+                        else
+                            echo -e "${RED}Failed to delete Sourcetree.app folder.${NC}"
+                        fi
                     else
                         echo -e "${RED}Failed to delete installation files.${NC}"
                     fi
