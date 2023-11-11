@@ -217,6 +217,7 @@ install_atlassian_sourcetree() {
         echo -e "${RED}Skipping Atlassian Sourcetree installation...${NC}"
     fi
 }
+
 # Function to download and install Tor Browser
 install_tor_browser() {
     local choice
@@ -241,7 +242,9 @@ install_tor_browser() {
                 if [ -f "tor-browser-macos-13.0.1.dmg" ]; then
                     echo -e "${GREEN}Tor Browser unzipped successfully.${NC}"
 
-                    sudo installer -pkg tor-browser-macos-13.0.1.dmg -target /
+                    sudo hdiutil attach tor-browser-macos-13.0.1.dmg
+                    sudo cp -R /Volumes/Tor\ Browser/Tor\ Browser.app /Applications/
+                    sudo hdiutil detach /Volumes/Tor\ Browser
 
                     if [ $? -eq 0 ]; then
                         echo -e "${GREEN}Tor Browser installed successfully.${NC}"
@@ -275,6 +278,55 @@ install_tor_browser() {
     fi
 }
 
+# Function to download and install Free Download Manager
+install_free_download_manager() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install Free Download Manager? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Downloading Free Download Manager...${NC}"
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Free_Download_Manager.zip
+
+        if [ -f "Free_Download_Manager.zip" ]; then
+            echo -e "${GREEN}Downloaded Free Download Manager successfully.${NC}"
+
+            unzip Free_Download_Manager.zip
+
+            if [ -f "fdm.dmg" ]; then
+                echo -e "${GREEN}Free Download Manager unzipped successfully.${NC}"
+
+                sudo hdiutil attach fdm.dmg
+                sudo cp -R /Volumes/FDM/Free\ Download\ Manager.app /Applications/
+                sudo hdiutil detach /Volumes/FDM
+
+                if [ $? -eq 0 ]; then
+                    echo -e "${GREEN}Free Download Manager installed successfully.${NC}"
+
+                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                    rm -rf Free_Download_Manager.zip fdm.dmg
+
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}Cleanup completed.${NC}"
+                    else
+                        echo -e "${RED}Failed to delete installation files.${NC}"
+                    fi
+                else
+                    echo -e "${RED}Failed to install Free Download Manager. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to unzip Free Download Manager. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download Free Download Manager. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Free Download Manager installation...${NC}"
+    fi
+}
+
 # Install Cloudflare WARP
 install_cloudflare_warp
 
@@ -283,5 +335,8 @@ install_atlassian_sourcetree
 
 # Install Tor Browser
 install_tor_browser
+
+# Install Free Download Manager
+install_free_download_manager
 
 echo -e "${GREEN}Installation complete.${NC}"
