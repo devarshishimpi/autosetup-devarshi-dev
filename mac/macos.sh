@@ -281,9 +281,9 @@ install_tor_browser() {
 # Function to download and install Free Download Manager
 install_free_download_manager() {
     local choice
-    echo -e -n "${YELLOW}Do you want to install Free Download Manager? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+	echo -e -n "${YELLOW}Do you want to install Free Download Manager? (yes/no)${NC} "
+	read -r choice
+	if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
         echo -e "${GREEN}Downloading Free Download Manager...${NC}"
         curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Free_Download_Manager.zip
 
@@ -303,7 +303,7 @@ install_free_download_manager() {
                     echo -e "${GREEN}Free Download Manager installed successfully.${NC}"
 
                     echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                    rm -rf Free_Download_Manager.zip fdm.dmg
+                    rm -rf Free_Download_Manager.zip fdm.dmg __MACOSX
 
                     if [ $? -eq 0 ]; then
                         echo -e "${GREEN}Cleanup completed.${NC}"
@@ -327,6 +327,56 @@ install_free_download_manager() {
     fi
 }
 
+# Function to download and install VLC Media Player
+install_vlc() {
+    local choice
+	echo -e -n "${YELLOW}Do you want to install VLC Media Player? (yes/no)${NC} "
+	read -r choice
+	if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
+        echo -e "${GREEN}Downloading VLC Media Player...${NC}"
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/VLC.zip
+
+        if [ -f "VLC.zip" ]; then
+            echo -e "${GREEN}Downloaded VLC.zip successfully.${NC}"
+
+            unzip VLC.zip
+
+            if [ -f "vlc-3.0.20-arm64.dmg" ]; then
+                echo -e "${GREEN}VLC Media Player unzipped successfully.${NC}"
+
+                echo -e "${YELLOW}Please enter your sudo password to install VLC Media Player.${NC}"
+                sudo hdiutil attach vlc-3.0.20-arm64.dmg
+                sudo cp -R /Volumes/VLC\ media\ player/VLC\ Media\ Player.app /Applications/
+                sudo hdiutil detach /Volumes/VLC\ media\ player
+
+                if [ $? -eq 0 ]; then
+                    echo -e "${GREEN}VLC Media Player installed successfully.${NC}"
+
+                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                    rm -rf VLC.zip vlc-3.0.20-arm64.dmg
+
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}Cleanup completed.${NC}"
+                    else
+                        echo -e "${RED}Failed to delete installation files.${NC}"
+                    fi
+                else
+                    echo -e "${RED}Failed to install VLC Media Player. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to unzip VLC Media Player. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download VLC.zip. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping VLC Media Player installation...${NC}"
+    fi
+}
+
 # Install Cloudflare WARP
 install_cloudflare_warp
 
@@ -338,5 +388,8 @@ install_tor_browser
 
 # Install Free Download Manager
 install_free_download_manager
+
+# Install VLC Media Player
+install_vlc
 
 echo -e "${GREEN}Installation complete.${NC}"
