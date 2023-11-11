@@ -217,11 +217,71 @@ install_atlassian_sourcetree() {
         echo -e "${RED}Skipping Atlassian Sourcetree installation...${NC}"
     fi
 }
+# Function to download and install Tor Browser
+install_tor_browser() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install Tor Browser? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Downloading Tor Browser...${NC}"
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Tor_Browser/Tor_Browser.zip.partaa
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Tor_Browser/Tor_Browser.zip.partab
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Tor_Browser/Tor_Browser.zip.partac
+
+        if [ -f "Tor_Browser.zip.partaa" ] && [ -f "Tor_Browser.zip.partab" ] && [ -f "Tor_Browser.zip.partac" ]; then
+            echo -e "${GREEN}Downloaded Tor Browser parts successfully.${NC}"
+
+            cat Tor_Browser.zip.part* > Tor_Browser.zip
+
+            if [ -f "Tor_Browser.zip" ]; then
+                echo -e "${GREEN}Combined Tor Browser parts into a zip file.${NC}"
+
+                unzip Tor_Browser.zip
+
+                if [ -f "tor-browser-macos-13.0.1.dmg" ]; then
+                    echo -e "${GREEN}Tor Browser unzipped successfully.${NC}"
+
+                    sudo installer -pkg tor-browser-macos-13.0.1.dmg -target /
+
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}Tor Browser installed successfully.${NC}"
+
+                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                        rm -rf Tor_Browser.zip tor-browser-macos-13.0.1.dmg Tor_Browser.zip.part*
+
+                        if [ $? -eq 0 ]; then
+                            echo -e "${GREEN}Cleanup completed.${NC}"
+                        else
+                            echo -e "${RED}Failed to delete installation files.${NC}"
+                        fi
+                    else
+                        echo -e "${RED}Failed to install Tor Browser. Exiting.${NC}"
+                        exit 1
+                    fi
+                else
+                    echo -e "${RED}Failed to unzip Tor Browser. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to combine Tor Browser parts into a zip file. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download Tor Browser parts. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Tor Browser installation...${NC}"
+    fi
+}
 
 # Install Cloudflare WARP
 install_cloudflare_warp
 
 # Install Atlassian Sourcetree
 install_atlassian_sourcetree
+
+# Install Tor Browser
+install_tor_browser
 
 echo -e "${GREEN}Installation complete.${NC}"
