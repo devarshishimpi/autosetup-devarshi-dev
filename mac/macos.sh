@@ -346,14 +346,14 @@ install_vlc() {
 
                 echo -e "${YELLOW}Please enter your sudo password to install VLC Media Player.${NC}"
                 sudo hdiutil attach vlc-3.0.20-arm64.dmg
-                sudo cp -R /Volumes/VLC\ media\ player/VLC\ Media\ Player.app /Applications/
+                sudo cp -R /Volumes/VLC\ media\ player/VLC.app /Applications/
                 sudo hdiutil detach /Volumes/VLC\ media\ player
 
                 if [ $? -eq 0 ]; then
                     echo -e "${GREEN}VLC Media Player installed successfully.${NC}"
 
                     echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                    rm -rf VLC.zip vlc-3.0.20-arm64.dmg
+                    rm -rf VLC.zip vlc-3.0.20-arm64.dmg __MACOSX
 
                     if [ $? -eq 0 ]; then
                         echo -e "${GREEN}Cleanup completed.${NC}"
