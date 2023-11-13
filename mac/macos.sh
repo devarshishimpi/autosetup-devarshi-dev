@@ -40,13 +40,15 @@ install_node() {
     read -r -n 3 choice
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
         echo -e "${GREEN}Installing Node.js (node@18)...${NC}"
-        if brew reinstall node@18; then
+        if brew install node@18; then
             echo -e "${GREEN}Node.js (node@18) installation successful.${NC}"
 
             # Add Node.js (node@18) to the PATH and set environment variables
+			echo -e "${YELLOW}Adding Node.js (node@18) to the PATH and set environment variables${NC}"
             echo 'export PATH="/opt/homebrew/opt/node@18/bin:$PATH"' >> ~/.zshrc
             export LDFLAGS="-L/opt/homebrew/opt/node@18/lib"
             export CPPFLAGS="-I/opt/homebrew/opt/node@18/include"
+			echo -e "${GREEN}Successfully added Node.js (node@18) to the PATH and set environment variables${NC}"
         else
             echo -e "${RED}Failed to install Node.js (node@18). Exiting.${NC}"
             exit 1
@@ -97,21 +99,24 @@ software_list=(
     "htop"
     "doctl"
     "ca-certificates"
-    "node@18"
     "mongodb-community@7.0"
     "mongosh"
     "gcc"
     "wget"
     "git"
+	"node@18"
 )
 
-# Collect user choices for software installation
 install_choices=()
 for software in "${software_list[@]}"; do
-    if prompt_install "$software"; then
-        install_choices+=("$software")
+    if [ "$software" = "node@18" ]; then
+        install_node
     else
-        echo -e "${RED}Skipping installation of $software...${NC}"
+        if prompt_install "$software"; then
+            install_choices+=("$software")
+        else
+            echo -e "${RED}Skipping installation of $software...${NC}"
+        fi
     fi
 done
 
