@@ -436,8 +436,10 @@ install_notion() {
                 if [ -f "Notion.dmg" ]; then
                     echo -e "${GREEN}Notion unzipped successfully.${NC}"
 
-                    # Assuming the installation process for Notion
-                    # Insert your Notion installation steps here
+                    echo -e "${YELLOW}Please enter your sudo password to install Notion.${NC}"
+                    sudo hdiutil attach Notion.dmg
+                    sudo cp -R /Volumes/Notion/Notion.app /Applications/
+                    sudo hdiutil detach /Volumes/Notion
 
                     if [ $? -eq 0 ]; then
                         echo -e "${GREEN}Notion installed successfully.${NC}"
@@ -472,7 +474,7 @@ install_notion() {
 }
 
 # Function to download and install OBS Studio
-install_obs() {
+install_obs_studio() {
     local choice
     echo -e -n "${YELLOW}Do you want to install OBS Studio? (yes/no)${NC} "
     read -r -n 3 choice
@@ -496,8 +498,8 @@ install_obs() {
                     echo -e "${GREEN}OBS Studio unzipped successfully.${NC}"
 
                     sudo hdiutil attach OBS.dmg
-                    sudo cp -R /Volumes/OBS/OBS.app /Applications/
-                    sudo hdiutil detach /Volumes/OBS
+                    sudo cp -R /Volumes/obs-studio-29.1.3-macos-arm64/OBS.app /Applications/
+                    sudo hdiutil detach /Volumes/obs-studio-29.1.3-macos-arm64
 
                     if [ $? -eq 0 ]; then
                         echo -e "${GREEN}OBS Studio installed successfully.${NC}"
