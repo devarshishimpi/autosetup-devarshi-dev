@@ -411,6 +411,66 @@ install_vlc() {
     fi
 }
 
+# Function to download and install Notion
+install_notion() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install Notion? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Downloading Notion...${NC}"
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partaa
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partab
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partac
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partad
+
+        if [ -f "Notion.zip.partaa" ] && [ -f "Notion.zip.partab" ] && [ -f "Notion.zip.partac" ] && [ -f "Notion.zip.partad" ]; then
+            echo -e "${GREEN}Downloaded Notion parts successfully.${NC}"
+
+            cat Notion.zip.part* > Notion.zip
+
+            if [ -f "Notion.zip" ]; then
+                echo -e "${GREEN}Combined Notion parts into a zip file.${NC}"
+
+                unzip Notion.zip
+
+                if [ -f "Notion.dmg" ]; then
+                    echo -e "${GREEN}Notion unzipped successfully.${NC}"
+
+                    # Assuming the installation process for Notion
+                    # Insert your Notion installation steps here
+
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}Notion installed successfully.${NC}"
+
+                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                        rm -rf Notion.zip Notion.dmg Notion.zip.part*
+
+                        if [ $? -eq 0 ]; then
+                            echo -e "${GREEN}Cleanup completed.${NC}"
+                        else
+                            echo -e "${RED}Failed to delete installation files.${NC}"
+                        fi
+                    else
+                        echo -e "${RED}Failed to install Notion. Exiting.${NC}"
+                        exit 1
+                    fi
+                else
+                    echo -e "${RED}Failed to unzip Notion. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to combine Notion parts into a zip file. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download Notion parts. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Notion installation...${NC}"
+    fi
+}
+
 # Install Cloudflare WARP
 install_cloudflare_warp
 
@@ -425,5 +485,8 @@ install_free_download_manager
 
 # Install VLC Media Player
 install_vlc
+
+# Install Notion
+install_notion
 
 echo -e "${GREEN}Installation complete.${NC}"
