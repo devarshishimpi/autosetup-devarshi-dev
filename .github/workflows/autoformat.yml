@@ -1,0 +1,39 @@
+name: Auto Format and Commit
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+
+jobs:
+  format-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run format:fix
+        run: npm run format:fix
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-action-bot@example.com"
+          git config --local user.name "GitHub Action Bot"
+          git add .
+          git commit -m "Auto-format and commit changes" -s
+          git push
