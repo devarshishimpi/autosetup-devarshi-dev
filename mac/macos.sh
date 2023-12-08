@@ -471,6 +471,66 @@ install_notion() {
     fi
 }
 
+# Function to download and install OBS Studio
+install_obs() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install OBS Studio? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Downloading OBS Studio...${NC}"
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/OBS/OBS.zip.partaa
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/OBS/OBS.zip.partab
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/OBS/OBS.zip.partac
+
+        if [ -f "OBS.zip.partaa" ] && [ -f "OBS.zip.partab" ] && [ -f "OBS.zip.partac" ]; then
+            echo -e "${GREEN}Downloaded OBS Studio parts successfully.${NC}"
+
+            cat OBS.zip.part* > OBS.zip
+
+            if [ -f "OBS.zip" ]; then
+                echo -e "${GREEN}Combined OBS Studio parts into a zip file.${NC}"
+
+                unzip OBS.zip
+
+                if [ -f "OBS.dmg" ]; then
+                    echo -e "${GREEN}OBS Studio unzipped successfully.${NC}"
+
+                    sudo hdiutil attach OBS.dmg
+                    sudo cp -R /Volumes/OBS/OBS.app /Applications/
+                    sudo hdiutil detach /Volumes/OBS
+
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}OBS Studio installed successfully.${NC}"
+
+                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                        rm -rf OBS.zip OBS.dmg OBS.zip.part*
+
+                        if [ $? -eq 0 ]; then
+                            echo -e "${GREEN}Cleanup completed.${NC}"
+                        else
+                            echo -e "${RED}Failed to delete installation files.${NC}"
+                        fi
+                    else
+                        echo -e "${RED}Failed to install OBS Studio. Exiting.${NC}"
+                        exit 1
+                    fi
+                else
+                    echo -e "${RED}Failed to unzip OBS Studio. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to combine OBS Studio parts into a zip file. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download OBS Studio parts. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping OBS Studio installation...${NC}"
+    fi
+}
+
 # Install Cloudflare WARP
 install_cloudflare_warp
 
@@ -488,5 +548,8 @@ install_vlc
 
 # Install Notion
 install_notion
+
+# Install OBS Studio
+install_obs_studio
 
 echo -e "${GREEN}Installation complete.${NC}"
