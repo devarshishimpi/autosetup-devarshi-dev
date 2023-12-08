@@ -93,6 +93,34 @@ else
     fi
 fi
 
+# Check if teamookla/speedtest is tapped and update it
+if brew tap | grep -q 'teamookla/speedtest'; then
+    echo -e "${GREEN}teamookla/speedtest tap is already added.${NC}"
+else
+    local speedtest_tap_choice
+    echo -e -n "${YELLOW}Do you want to tap 'teamookla/speedtest'? (yes/no)${NC} "
+    read -r -n 3 speedtest_tap_choice
+    if [ "$speedtest_tap_choice" = "yes" ] || [ "$speedtest_tap_choice" = "y" ]; then
+        brew tap teamookla/speedtest
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}teamookla/speedtest tap added.${NC}"
+            echo -e "${GREEN}Updating teamookla/speedtest...${NC}"
+            brew update
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}teamookla/speedtest update successful.${NC}"
+            else
+                echo -e "${RED}Failed to update teamookla/speedtest. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to tap teamookla/speedtest. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping teamookla/speedtest tap and update...${NC}"
+    fi
+fi
+
 # Define the list of software to install
 software_list=(
     "python@3.11"
@@ -105,6 +133,7 @@ software_list=(
     "wget"
     "git"
 	"node@18"
+    "speedtest"
 )
 
 install_choices=()
