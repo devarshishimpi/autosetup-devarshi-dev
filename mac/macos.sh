@@ -58,11 +58,39 @@ install_node() {
     fi
 }
 
+# Function to install mas (Mac App Store command-line interface)
+install_mas() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install mas (Mac App Store command-line interface)? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Installing mas...${NC}"
+
+        # Install mas using Homebrew
+        if brew install mas; then
+            echo -e "${GREEN}mas installation successful.${NC}"
+        else
+            echo -e "${RED}Failed to install mas. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}mas (Mac App Store command-line interface) is required for this script. Exiting.${NC}"
+        exit 1
+    fi
+}
+
 # Check if Homebrew is installed
 if command -v brew &>/dev/null; then
     echo -e "${GREEN}Homebrew is already installed.${NC}"
 else
     install_homebrew
+fi
+
+# Check if mas (Mac App Store command-line interface) is installed
+if command -v mas &>/dev/null; then
+    echo -e "${GREEN}mas is already installed.${NC}"
+else
+    install_mas
 fi
 
 # Check if mongodb/brew is tapped and update it
@@ -123,6 +151,8 @@ fi
 
 # Define the list of software to install
 software_list=(
+    "node@18"
+    "speedtest"
     "python@3.11"
     "htop"
     "doctl"
@@ -132,8 +162,13 @@ software_list=(
     "gcc"
     "wget"
     "git"
-	"node@18"
-    "speedtest"
+    "mas"
+    "obs"
+    "figma"
+    "docker"
+    "postman"
+    "github"
+    "utm"
 )
 
 install_choices=()
@@ -164,6 +199,33 @@ if [ ${#install_choices[@]} -gt 0 ]; then
 else
     echo -e "${YELLOW}No software selected for installation.${NC}"
 fi
+
+# Function to install Slack from the Mac App Store
+install_slack() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install Slack from the Mac App Store? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Installing Slack from the Mac App Store...${NC}"
+        
+        # Check if mas (Mac App Store command-line interface) is installed
+        if command -v mas &>/dev/null; then
+            # Install Slack (you may need to replace the ID with the correct one)
+            mas install 803453959  # Slack's Mac App Store ID
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}Slack installation successful.${NC}"
+            else
+                echo -e "${RED}Failed to install Slack. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}mas (Mac App Store command-line interface) is not installed. Please install it first.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Slack installation...${NC}"
+    fi
+}
 
 # Function to download and install Cloudflare WARP
 install_cloudflare_warp() {
@@ -532,6 +594,9 @@ install_obs_studio() {
         echo -e "${RED}Skipping OBS Studio installation...${NC}"
     fi
 }
+
+# Install Slack
+install_slack
 
 # Install Cloudflare WARP
 install_cloudflare_warp
