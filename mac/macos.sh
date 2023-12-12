@@ -163,12 +163,6 @@ software_list=(
     "wget"
     "git"
     "mas"
-    "obs"
-    "figma"
-    "docker"
-    "postman"
-    "github"
-    "utm"
 )
 
 install_choices=()
@@ -595,8 +589,86 @@ install_obs_studio() {
     fi
 }
 
+# Function to install an app from the Mac App Store
+install_app() {
+    local app_name="$1"
+    local app_id="$2"
+
+    echo -e -n "${YELLOW}Do you want to install $app_name from the Mac App Store? (yes/no)${NC} "
+    read -r -n 3 choice
+
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Installing $app_name from the Mac App Store...${NC}"
+
+        # Check if mas (Mac App Store command-line interface) is installed
+        if command -v mas &>/dev/null; then
+            # Install the app
+            mas install "$app_id"
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}$app_name installation successful.${NC}"
+            else
+                echo -e "${RED}Failed to install $app_name. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}mas (Mac App Store command-line interface) is not installed. Please install it first.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping $app_name installation...${NC}"
+    fi
+}
+
 # Install Slack
-install_slack
+install_app "Slack" 803453959
+
+# Install Microsoft PowerPoint
+install_app "Microsoft PowerPoint" 462062816
+
+# Install Microsoft Word
+install_app "Microsoft Word" 462054704
+
+# Install Microsoft Excel
+install_app "Microsoft Excel" 462058435
+
+# Install Microsoft OneDrive
+install_app "Microsoft OneDrive" 823766827
+
+# Install Microsoft Outlook
+install_app "Microsoft Outlook" 985367838
+
+# Install Keynote
+install_app "Keynote" 409183694
+
+# Install Numbers
+install_app "Numbers" 409203825
+
+# Install Pages
+install_app "Pages" 409201541
+
+# Install XCode
+install_app "XCode" 497799835
+
+# Install Apple Developer
+install_app "Apple Developer" 640199958
+
+# Install WhatsApp Desktop
+install_app "WhatsApp Messenger" 310633997
+
+# Install Telegram
+install_app "Telegram" 747648890
+
+# Install Hologram Desktop
+install_app "Hologram Desktop" 1529001798
+
+# Install Termius
+install_app "Termius" 1176074088
+
+# Install Usage
+install_app "Usage" 1561788435
+
+# Install Bitpay
+install_app "Bitpay" 1440200291
 
 # Install Cloudflare WARP
 install_cloudflare_warp
