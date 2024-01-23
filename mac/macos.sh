@@ -221,6 +221,15 @@ software_list_gui=(
     "spotify"
     "zoom"
     "discord"
+    "utm"
+    "nomachine"
+    "anydesk"
+    "gather"
+    "sourcetree"
+    "free-download-manager"
+    "zed"
+    "codux"
+    "redisinsight"
 )
 
 install_choices_gui=()
@@ -245,129 +254,8 @@ if [ ${#install_choices_gui[@]} -gt 0 ]; then
         fi
     done
 else
-    echo -e "${YELLOW}No GUI software selected for installation.${NC}"
+    echo -e "${YELLOW}No GUI software selected for installation using Brew Cask.${NC}"
 fi
-
-# Function to install Slack from the Mac App Store
-install_slack() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install Slack from the Mac App Store? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing Slack from the Mac App Store...${NC}"
-        
-        # Check if mas (Mac App Store command-line interface) is installed
-        if command -v mas &>/dev/null; then
-            # Install Slack (you may need to replace the ID with the correct one)
-            mas install 803453959  # Slack's Mac App Store ID
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}Slack installation successful.${NC}"
-            else
-                echo -e "${RED}Failed to install Slack. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}mas (Mac App Store command-line interface) is not installed. Please install it first.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Slack installation...${NC}"
-    fi
-}
-
-# Function to download and install Atlassian Sourcetree
-install_atlassian_sourcetree() {
-    local choice
-    read -r -p "$(echo -e ${YELLOW}Do you want to install Atlassian Sourcetree? \(yes/no\)${NC}) " choice
-    choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]') # Convert to lowercase
-    if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
-        echo -e "${GREEN}Downloading Atlassian Sourcetree...${NC}"
-        if curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Atlassian_Sourcetree.zip; then
-            echo -e "${GREEN}Atlassian Sourcetree downloaded successfully.${NC}"
-            echo -e "${GREEN}Unzipping Atlassian Sourcetree...${NC}"
-            if unzip Atlassian_Sourcetree.zip; then
-                echo -e "${GREEN}Atlassian Sourcetree unzipped successfully.${NC}"
-                echo -e "${GREEN}Installing Atlassian Sourcetree...${NC}"
-                # Moving Sourcetree.app to Applications
-                if mv "Sourcetree.app" "/Applications/"; then
-                    echo -e "${GREEN}Atlassian Sourcetree installed successfully.${NC}"
-                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                    if rm -rf Atlassian_Sourcetree.zip; then
-                        echo -e "${GREEN}Cleanup completed.${NC}"
-                        echo -e "${GREEN}Deleting Sourcetree.app folder from the current directory...${NC}"
-                        if rm -rf "Sourcetree.app"; then
-                            echo -e "${GREEN}Sourcetree.app folder deleted.${NC}"
-                        else
-                            echo -e "${RED}Failed to delete Sourcetree.app folder.${NC}"
-                        fi
-                    else
-                        echo -e "${RED}Failed to delete installation files.${NC}"
-                    fi
-                else
-                    echo -e "${RED}Failed to install Atlassian Sourcetree. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to unzip Atlassian Sourcetree. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download Atlassian Sourcetree. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Atlassian Sourcetree installation...${NC}"
-    fi
-}
-
-# Function to download and install Free Download Manager
-install_free_download_manager() {
-    local choice
-	echo -e -n "${YELLOW}Do you want to install Free Download Manager? (yes/no)${NC} "
-	read -r choice
-	if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
-        echo -e "${GREEN}Downloading Free Download Manager...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Free_Download_Manager.zip
-
-        if [ -f "Free_Download_Manager.zip" ]; then
-            echo -e "${GREEN}Downloaded Free Download Manager successfully.${NC}"
-
-            unzip Free_Download_Manager.zip
-
-            if [ -f "fdm.dmg" ]; then
-                echo -e "${GREEN}Free Download Manager unzipped successfully.${NC}"
-
-                sudo hdiutil attach fdm.dmg
-                sudo cp -R /Volumes/FDM/Free\ Download\ Manager.app /Applications/
-                sudo hdiutil detach /Volumes/FDM
-
-                if [ $? -eq 0 ]; then
-                    echo -e "${GREEN}Free Download Manager installed successfully.${NC}"
-
-                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                    rm -rf Free_Download_Manager.zip fdm.dmg __MACOSX
-
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}Cleanup completed.${NC}"
-                    else
-                        echo -e "${RED}Failed to delete installation files.${NC}"
-                    fi
-                else
-                    echo -e "${RED}Failed to install Free Download Manager. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to unzip Free Download Manager. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download Free Download Manager. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Free Download Manager installation...${NC}"
-    fi
-}
 
 # Function to install an app from the Mac App Store
 install_app() {
@@ -449,12 +337,6 @@ install_app "Usage" 1561788435
 
 # Install Bitpay
 install_app "Bitpay" 1440200291
-
-# Install Atlassian Sourcetree
-install_atlassian_sourcetree
-
-# Install Free Download Manager
-install_free_download_manager
 
 #Clear local brew cache
 echo -e "${YELLOW}Clearing local brew cache.${NC}"
