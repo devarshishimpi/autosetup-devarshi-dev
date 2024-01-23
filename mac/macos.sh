@@ -216,6 +216,11 @@ software_list_gui=(
     "notion"
     "vlc"
     "cloudflare-warp"
+    "openvpn-connect"
+    "figma"
+    "spotify"
+    "zoom"
+    "discord"
 )
 
 install_choices_gui=()
@@ -270,48 +275,6 @@ install_slack() {
     fi
 }
 
-# Function to download and install Cloudflare WARP
-install_cloudflare_warp() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install Cloudflare WARP? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Downloading Cloudflare WARP...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Cloudflare_WARP.zip
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}Cloudflare WARP downloaded successfully.${NC}"
-            echo -e "${GREEN}Unzipping Cloudflare WARP...${NC}"
-            unzip Cloudflare_WARP.zip
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}Cloudflare WARP unzipped successfully.${NC}"
-                echo -e "${YELLOW}Please enter your sudo password to install Cloudflare WARP.${NC}"
-                sudo installer -pkg Cloudflare_WARP.pkg -target /
-                if [ $? -eq 0 ]; then
-                    echo -e "${GREEN}Cloudflare WARP installed successfully.${NC}"
-                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                    sudo rm -rf Cloudflare_WARP.zip Cloudflare_WARP.pkg
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}Cleanup completed.${NC}"
-                    else
-                        echo -e "${RED}Failed to delete installation files.${NC}"
-                    fi
-                else
-                    echo -e "${RED}Failed to install Cloudflare WARP. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to unzip Cloudflare WARP. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download Cloudflare WARP. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Cloudflare WARP installation...${NC}"
-    fi
-}
-
 # Function to download and install Atlassian Sourcetree
 install_atlassian_sourcetree() {
     local choice
@@ -354,66 +317,6 @@ install_atlassian_sourcetree() {
         fi
     else
         echo -e "${RED}Skipping Atlassian Sourcetree installation...${NC}"
-    fi
-}
-
-# Function to download and install Tor Browser
-install_tor_browser() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install Tor Browser? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Downloading Tor Browser...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Tor_Browser/Tor_Browser.zip.partaa
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Tor_Browser/Tor_Browser.zip.partab
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Tor_Browser/Tor_Browser.zip.partac
-
-        if [ -f "Tor_Browser.zip.partaa" ] && [ -f "Tor_Browser.zip.partab" ] && [ -f "Tor_Browser.zip.partac" ]; then
-            echo -e "${GREEN}Downloaded Tor Browser parts successfully.${NC}"
-
-            cat Tor_Browser.zip.part* > Tor_Browser.zip
-
-            if [ -f "Tor_Browser.zip" ]; then
-                echo -e "${GREEN}Combined Tor Browser parts into a zip file.${NC}"
-
-                unzip Tor_Browser.zip
-
-                if [ -f "tor-browser-macos-13.0.1.dmg" ]; then
-                    echo -e "${GREEN}Tor Browser unzipped successfully.${NC}"
-
-                    sudo hdiutil attach tor-browser-macos-13.0.1.dmg
-                    sudo cp -R /Volumes/Tor\ Browser/Tor\ Browser.app /Applications/
-                    sudo hdiutil detach /Volumes/Tor\ Browser
-
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}Tor Browser installed successfully.${NC}"
-
-                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                        rm -rf Tor_Browser.zip tor-browser-macos-13.0.1.dmg Tor_Browser.zip.part*
-
-                        if [ $? -eq 0 ]; then
-                            echo -e "${GREEN}Cleanup completed.${NC}"
-                        else
-                            echo -e "${RED}Failed to delete installation files.${NC}"
-                        fi
-                    else
-                        echo -e "${RED}Failed to install Tor Browser. Exiting.${NC}"
-                        exit 1
-                    fi
-                else
-                    echo -e "${RED}Failed to unzip Tor Browser. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to combine Tor Browser parts into a zip file. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download Tor Browser parts. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Tor Browser installation...${NC}"
     fi
 }
 
@@ -463,178 +366,6 @@ install_free_download_manager() {
         fi
     else
         echo -e "${RED}Skipping Free Download Manager installation...${NC}"
-    fi
-}
-
-# Function to download and install VLC Media Player
-install_vlc() {
-    local choice
-	echo -e -n "${YELLOW}Do you want to install VLC Media Player? (yes/no)${NC} "
-	read -r choice
-	if [[ "$choice" == "yes" || "$choice" == "y" ]]; then
-        echo -e "${GREEN}Downloading VLC Media Player...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/VLC.zip
-
-        if [ -f "VLC.zip" ]; then
-            echo -e "${GREEN}Downloaded VLC.zip successfully.${NC}"
-
-            unzip VLC.zip
-
-            if [ -f "vlc-3.0.20-arm64.dmg" ]; then
-                echo -e "${GREEN}VLC Media Player unzipped successfully.${NC}"
-
-                echo -e "${YELLOW}Please enter your sudo password to install VLC Media Player.${NC}"
-                sudo hdiutil attach vlc-3.0.20-arm64.dmg
-                sudo cp -R /Volumes/VLC\ media\ player/VLC.app /Applications/
-                sudo hdiutil detach /Volumes/VLC\ media\ player
-
-                if [ $? -eq 0 ]; then
-                    echo -e "${GREEN}VLC Media Player installed successfully.${NC}"
-
-                    echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                    rm -rf VLC.zip vlc-3.0.20-arm64.dmg __MACOSX
-
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}Cleanup completed.${NC}"
-                    else
-                        echo -e "${RED}Failed to delete installation files.${NC}"
-                    fi
-                else
-                    echo -e "${RED}Failed to install VLC Media Player. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to unzip VLC Media Player. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download VLC.zip. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping VLC Media Player installation...${NC}"
-    fi
-}
-
-# Function to download and install Notion
-install_notion() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install Notion? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Downloading Notion...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partaa
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partab
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partac
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Notion/Notion.zip.partad
-
-        if [ -f "Notion.zip.partaa" ] && [ -f "Notion.zip.partab" ] && [ -f "Notion.zip.partac" ] && [ -f "Notion.zip.partad" ]; then
-            echo -e "${GREEN}Downloaded Notion parts successfully.${NC}"
-
-            cat Notion.zip.part* > Notion.zip
-
-            if [ -f "Notion.zip" ]; then
-                echo -e "${GREEN}Combined Notion parts into a zip file.${NC}"
-
-                unzip Notion.zip
-
-                if [ -f "Notion.dmg" ]; then
-                    echo -e "${GREEN}Notion unzipped successfully.${NC}"
-
-                    echo -e "${YELLOW}Please enter your sudo password to install Notion.${NC}"
-                    sudo hdiutil attach Notion.dmg
-                    sudo cp -R /Volumes/Notion/Notion.app /Applications/
-                    sudo hdiutil detach /Volumes/Notion
-
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}Notion installed successfully.${NC}"
-
-                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                        rm -rf Notion.zip Notion.dmg Notion.zip.part*
-
-                        if [ $? -eq 0 ]; then
-                            echo -e "${GREEN}Cleanup completed.${NC}"
-                        else
-                            echo -e "${RED}Failed to delete installation files.${NC}"
-                        fi
-                    else
-                        echo -e "${RED}Failed to install Notion. Exiting.${NC}"
-                        exit 1
-                    fi
-                else
-                    echo -e "${RED}Failed to unzip Notion. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to combine Notion parts into a zip file. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download Notion parts. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Notion installation...${NC}"
-    fi
-}
-
-# Function to download and install OBS Studio
-install_obs_studio() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install OBS Studio? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Downloading OBS Studio...${NC}"
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/OBS/OBS.zip.partaa
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/OBS/OBS.zip.partab
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/OBS/OBS.zip.partac
-
-        if [ -f "OBS.zip.partaa" ] && [ -f "OBS.zip.partab" ] && [ -f "OBS.zip.partac" ]; then
-            echo -e "${GREEN}Downloaded OBS Studio parts successfully.${NC}"
-
-            cat OBS.zip.part* > OBS.zip
-
-            if [ -f "OBS.zip" ]; then
-                echo -e "${GREEN}Combined OBS Studio parts into a zip file.${NC}"
-
-                unzip OBS.zip
-
-                if [ -f "OBS.dmg" ]; then
-                    echo -e "${GREEN}OBS Studio unzipped successfully.${NC}"
-
-                    sudo hdiutil attach OBS.dmg
-                    sudo cp -R /Volumes/obs-studio-29.1.3-macos-arm64/OBS.app /Applications/
-                    sudo hdiutil detach /Volumes/obs-studio-29.1.3-macos-arm64
-
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}OBS Studio installed successfully.${NC}"
-
-                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                        rm -rf OBS.zip OBS.dmg OBS.zip.part*
-
-                        if [ $? -eq 0 ]; then
-                            echo -e "${GREEN}Cleanup completed.${NC}"
-                        else
-                            echo -e "${RED}Failed to delete installation files.${NC}"
-                        fi
-                    else
-                        echo -e "${RED}Failed to install OBS Studio. Exiting.${NC}"
-                        exit 1
-                    fi
-                else
-                    echo -e "${RED}Failed to unzip OBS Studio. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to combine OBS Studio parts into a zip file. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download OBS Studio parts. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping OBS Studio installation...${NC}"
     fi
 }
 
@@ -719,26 +450,11 @@ install_app "Usage" 1561788435
 # Install Bitpay
 install_app "Bitpay" 1440200291
 
-# Install Cloudflare WARP
-install_cloudflare_warp
-
 # Install Atlassian Sourcetree
 install_atlassian_sourcetree
 
-# Install Tor Browser
-install_tor_browser
-
 # Install Free Download Manager
 install_free_download_manager
-
-# Install VLC Media Player
-install_vlc
-
-# Install Notion
-install_notion
-
-# Install OBS Studio
-install_obs_studio
 
 #Clear local brew cache
 echo -e "${YELLOW}Clearing local brew cache.${NC}"
