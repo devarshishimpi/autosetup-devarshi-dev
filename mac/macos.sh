@@ -194,6 +194,55 @@ else
     echo -e "${YELLOW}No software selected for installation.${NC}"
 fi
 
+#prompt for brew cash softwares
+echo -e "${YELLOW}Installing Brew Cask softwares.${NC}"
+
+# Function to prompt user for gui installation
+prompt_install_gui() {
+    local software_name_gui="$1"
+    local choice
+    echo -e -n "${YELLOW}Do you want to install $software_name_gui? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+software_list_gui=(
+    "tor-browser"
+    "obs"
+    "notion"
+    "vlc"
+    "cloudflare-warp"
+)
+
+install_choices_gui=()
+for software_gui in "${software_list_gui[@]}"; do
+    if prompt_install_gui "$software_gui"; then
+        install_choices_gui+=("$software_gui")
+    else
+        echo -e "${RED}Skipping installation of $software_gui...${NC}"
+    fi
+done
+
+# Perform the selected gui installations
+if [ ${#install_choices_gui[@]} -gt 0 ]; then
+    echo -e "${GREEN}Installing selected GUI software...${NC}"
+    for software_gui in "${install_choices_gui[@]}"; do
+        echo -e "${GREEN}Installing $software_gui...${NC}"
+        if brew install --cask "$software_gui"; then
+            echo -e "${GREEN}$software_gui installation successful.${NC}"
+        else
+            echo -e "${RED}Failed to install $software_gui. Exiting.${NC}"
+            exit 1
+        fi
+    done
+else
+    echo -e "${YELLOW}No GUI software selected for installation.${NC}"
+fi
+
 # Function to install Slack from the Mac App Store
 install_slack() {
     local choice
@@ -690,5 +739,10 @@ install_notion
 
 # Install OBS Studio
 install_obs_studio
+
+#Clear local brew cache
+echo -e "${YELLOW}Clearing local brew cache.${NC}"
+brew cleanup
+echo -e "${GREEN}Successfully cleared local brew cache.${NC}"
 
 echo -e "${GREEN}Installation complete.${NC}"
