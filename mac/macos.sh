@@ -36,25 +36,25 @@ prompt_install() {
 # Function to handle the installation of Node.js
 install_node() {
     local choice
-    echo -e -n "${YELLOW}Do you want to install Node.js (node@18)? (yes/no)${NC} "
+    echo -e -n "${YELLOW}Do you want to install Node.js (node@21)? (yes/no)${NC} "
     read -r -n 3 choice
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing Node.js (node@18)...${NC}"
-        if brew install node@18; then
-            echo -e "${GREEN}Node.js (node@18) installation successful.${NC}"
+        echo -e "${GREEN}Installing Node.js (node@21)...${NC}"
+        if brew install node@21; then
+            echo -e "${GREEN}Node.js (node@21) installation successful.${NC}"
 
-            # Add Node.js (node@18) to the PATH and set environment variables
-			echo -e "${YELLOW}Adding Node.js (node@18) to the PATH and set environment variables${NC}"
-            echo 'export PATH="/opt/homebrew/opt/node@18/bin:$PATH"' >> ~/.zshrc
-            export LDFLAGS="-L/opt/homebrew/opt/node@18/lib"
-            export CPPFLAGS="-I/opt/homebrew/opt/node@18/include"
-			echo -e "${GREEN}Successfully added Node.js (node@18) to the PATH and set environment variables${NC}"
+            # Add Node.js (node@21) to the PATH and set environment variables
+			echo -e "${YELLOW}Adding Node.js (node@21) to the PATH and set environment variables${NC}"
+            echo 'export PATH="/opt/homebrew/opt/node@21/bin:$PATH"' >> ~/.zshrc
+            export LDFLAGS="-L/opt/homebrew/opt/node@21/lib"
+            export CPPFLAGS="-I/opt/homebrew/opt/node@21/include"
+			echo -e "${GREEN}Successfully added Node.js (node@21) to the PATH and set environment variables${NC}"
         else
-            echo -e "${RED}Failed to install Node.js (node@18). Exiting.${NC}"
+            echo -e "${RED}Failed to install Node.js (node@21). Exiting.${NC}"
             exit 1
         fi
     else
-        echo -e "${RED}Skipping Node.js (node@18) installation...${NC}"
+        echo -e "${RED}Skipping Node.js (node@21) installation...${NC}"
     fi
 }
 
@@ -151,7 +151,7 @@ fi
 
 # Define the list of software to install
 software_list=(
-    "node@18"
+    "node@21"
     "speedtest"
     "python@3.11"
     "htop"
@@ -167,7 +167,7 @@ software_list=(
 
 install_choices=()
 for software in "${software_list[@]}"; do
-    if [ "$software" = "node@18" ]; then
+    if [ "$software" = "node@21" ]; then
         install_node
     else
         if prompt_install "$software"; then
