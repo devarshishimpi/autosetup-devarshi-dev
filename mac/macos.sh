@@ -48,6 +48,8 @@ install_node() {
             echo 'export PATH="/opt/homebrew/opt/node@21/bin:$PATH"' >> ~/.zshrc
             export LDFLAGS="-L/opt/homebrew/opt/node@21/lib"
             export CPPFLAGS="-I/opt/homebrew/opt/node@21/include"
+            sudo chown -R $(whoami) ~/.npm
+            sudo chown -R $(whoami) /usr/local/lib/node_modules
 			echo -e "${GREEN}Successfully added Node.js (node@21) to the PATH and set environment variables${NC}"
         else
             echo -e "${RED}Failed to install Node.js (node@21). Exiting.${NC}"
@@ -153,7 +155,7 @@ fi
 software_list=(
     "node@21"
     "speedtest"
-    "python@3.11"
+    "python@3.12"
     "htop"
     "doctl"
     "ca-certificates"
@@ -230,6 +232,9 @@ software_list_gui=(
     "zed"
     "codux"
     "redisinsight"
+    "protonvpn"
+    "cyberduck"
+    "postman"
 )
 
 install_choices_gui=()
@@ -255,6 +260,65 @@ if [ ${#install_choices_gui[@]} -gt 0 ]; then
     done
 else
     echo -e "${YELLOW}No GUI software selected for installation using Brew Cask.${NC}"
+fi
+
+# prompt for npm global packages
+echo -e "${YELLOW}Installing NPM Global Packages.${NC}"
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo -e "${RED}Error: Node.js is not installed.${NC}" 
+    exit 1
+fi
+
+# Check if npm is installed
+if ! command -v npm &> /dev/null; then
+    echo -e "${RED}Error: npm is not installed.${NC}"
+    exit 1
+fi
+
+# Function to prompt user for npm package installation
+prompt_install_npm() {
+    local software_name_npm="$1"
+    local choice
+    echo -e -n "${YELLOW}Do you want to install $software_name_npm? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+software_list_npm=(
+    "nodemon"
+    "typescript"
+    "netlify-cli"
+)
+
+install_choices_npm=()
+for software_npm in "${software_list_npm[@]}"; do
+    if prompt_install_npm "$software_npm"; then
+        install_choices_npm+=("$software_npm")
+    else
+        echo -e "${RED}Skipping installation of $software_npm...${NC}"
+    fi
+done
+
+# Perform the selected npm package installations
+if [ ${#install_choices_npm[@]} -gt 0 ]; then
+    echo -e "${GREEN}Installing selected npm packages...${NC}"
+    for software_npm in "${install_choices_npm[@]}"; do
+        echo -e "${GREEN}Installing $software_npm...${NC}"
+        if npm install -g "$software_npm"; then
+            echo -e "${GREEN}$software_npm installation successful.${NC}"
+        else
+            echo -e "${RED}Failed to install $software_npm. Exiting.${NC}"
+            exit 1
+        fi
+    done
+else
+    echo -e "${YELLOW}No npm packages selected for installation.${NC}"
 fi
 
 # Function to install an app from the Mac App Store
@@ -337,6 +401,12 @@ install_app "Usage" 1561788435
 
 # Install Bitpay
 install_app "Bitpay" 1440200291
+
+# Install Davinci Resolve
+install_app "Davinci Resolve" 571213070
+
+# Install Bluebook
+install_app "Bluebook" 1645016851
 
 #Clear local brew cache
 echo -e "${YELLOW}Clearing local brew cache.${NC}"
