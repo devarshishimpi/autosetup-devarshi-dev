@@ -351,6 +351,77 @@ install_app() {
     fi
 }
 
+# Function to download and install Docker
+install_docker() {
+    local choice
+    echo -e -n "${YELLOW}Do you want to install Docker? (yes/no)${NC} "
+    read -r -n 3 choice
+    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
+        echo -e "${GREEN}Downloading Docker...${NC}"
+        
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partaa
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partab
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partac
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partad
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partae
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partaf
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partag
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partah
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partai
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partaj
+        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partak
+
+        if [ -f "Docker.zip.partaa" ] && [ -f "Docker.zip.partab" ] && [ -f "Docker.zip.partac" ] && [ -f "Docker.zip.partad" ] && [ -f "Docker.zip.partae" ] && [ -f "Docker.zip.partaf" ] && [ -f "Docker.zip.partag" ] && [ -f "Docker.zip.partah" ] && [ -f "Docker.zip.partai" ] && [ -f "Docker.zip.partaj" ] && [ -f "Docker.zip.partak" ]; then
+            echo -e "${GREEN}Downloaded Docker parts successfully.${NC}"
+
+            cat Docker.zip.part* > Docker.zip
+
+            if [ -f "Docker.zip" ]; then
+                echo -e "${GREEN}Combined Docker parts into a zip file.${NC}"
+
+                unzip Docker.zip
+
+                if [ -f "Docker.dmg" ]; then
+                    echo -e "${GREEN}Docker unzipped successfully.${NC}"
+
+                    echo -e "${YELLOW}Please enter your sudo password to install Docker.${NC}"
+                    sudo hdiutil attach Docker.dmg
+                    sudo cp -R /Volumes/Docker/Docker.app /Applications/
+                    sudo hdiutil detach /Volumes/Docker
+
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}Docker installed successfully.${NC}"
+
+                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
+                        rm -rf Docker.zip Docker.dmg Docker.zip.part*
+
+                        if [ $? -eq 0 ]; then
+                            echo -e "${GREEN}Cleanup completed.${NC}"
+                        else
+                            echo -e "${RED}Failed to delete installation files.${NC}"
+                        fi
+                    else
+                        echo -e "${RED}Failed to install Docker. Exiting.${NC}"
+                        exit 1
+                    fi
+                else
+                    echo -e "${RED}Failed to unzip Docker. Exiting.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Failed to combine Docker parts into a zip file. Exiting.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Failed to download Docker parts. Exiting.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Skipping Docker installation...${NC}"
+    fi
+}
+
+
 # Install Slack
 install_app "Slack" 803453959
 
@@ -407,6 +478,9 @@ install_app "Davinci Resolve" 571213070
 
 # Install Bluebook
 install_app "Bluebook" 1645016851
+
+# Install Docker
+install_docker
 
 #Clear local brew cache
 echo -e "${YELLOW}Clearing local brew cache.${NC}"
