@@ -235,6 +235,12 @@ software_list_gui=(
     "protonvpn"
     "cyberduck"
     "postman"
+    "github"
+    "microsoft-edge"
+    "firefox"
+    "google-chrome"
+    "brave-browser"
+    "visual-studio-code"
 )
 
 install_choices_gui=()
