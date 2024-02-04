@@ -300,6 +300,8 @@ software_list_npm=(
     "nodemon"
     "typescript"
     "netlify-cli"
+    "vsce"
+    "prettier"
 )
 
 install_choices_npm=()
