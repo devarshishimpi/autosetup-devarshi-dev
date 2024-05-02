@@ -165,6 +165,7 @@ software_list=(
     "wget"
     "git"
     "mas"
+    "watchman"
 )
 
 install_choices=()
@@ -299,8 +300,13 @@ prompt_install_npm() {
 software_list_npm=(
     "nodemon"
     "typescript"
+    "wrangler"
+    "yarn"
+    "vite"
     "netlify-cli"
-    "vsce"
+    "@tunnel/cli"
+    "@vscode/vsce"
+    "create-next-app"
     "prettier"
 )
 
