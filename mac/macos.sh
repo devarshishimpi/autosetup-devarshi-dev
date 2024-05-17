@@ -36,27 +36,27 @@ prompt_install() {
 # Function to handle the installation of Node.js
 install_node() {
     local choice
-    echo -e -n "${YELLOW}Do you want to install Node.js (node@21)? (yes/no)${NC} "
+    echo -e -n "${YELLOW}Do you want to install Node.js (node)? (yes/no)${NC} "
     read -r -n 3 choice
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing Node.js (node@21)...${NC}"
-        if brew install node@21; then
-            echo -e "${GREEN}Node.js (node@21) installation successful.${NC}"
+        echo -e "${GREEN}Installing Node.js (node)...${NC}"
+        if brew install node; then
+            echo -e "${GREEN}Node.js (node) installation successful.${NC}"
 
-            # Add Node.js (node@21) to the PATH and set environment variables
-			echo -e "${YELLOW}Adding Node.js (node@21) to the PATH and set environment variables${NC}"
-            echo 'export PATH="/opt/homebrew/opt/node@21/bin:$PATH"' >> ~/.zshrc
-            export LDFLAGS="-L/opt/homebrew/opt/node@21/lib"
-            export CPPFLAGS="-I/opt/homebrew/opt/node@21/include"
+            # Add Node.js (node) to the PATH and set environment variables
+			echo -e "${YELLOW}Adding Node.js (node) to the PATH and set environment variables${NC}"
+            echo 'export PATH="/opt/homebrew/opt/node/bin:$PATH"' >> ~/.zshrc
+            export LDFLAGS="-L/opt/homebrew/opt/node/lib"
+            export CPPFLAGS="-I/opt/homebrew/opt/node/include"
             sudo chown -R $(whoami) ~/.npm
             sudo chown -R $(whoami) /usr/local/lib/node_modules
-			echo -e "${GREEN}Successfully added Node.js (node@21) to the PATH and set environment variables${NC}"
+			echo -e "${GREEN}Successfully added Node.js (node) to the PATH and set environment variables${NC}"
         else
-            echo -e "${RED}Failed to install Node.js (node@21). Exiting.${NC}"
+            echo -e "${RED}Failed to install Node.js (node). Exiting.${NC}"
             exit 1
         fi
     else
-        echo -e "${RED}Skipping Node.js (node@21) installation...${NC}"
+        echo -e "${RED}Skipping Node.js (node) installation...${NC}"
     fi
 }
 
@@ -153,7 +153,7 @@ fi
 
 # Define the list of software to install
 software_list=(
-    "node@21"
+    "node"
     "speedtest"
     "python@3.12"
     "htop"
@@ -166,6 +166,7 @@ software_list=(
     "git"
     "mas"
     "watchman"
+    "nmap"
 )
 
 install_choices=()
@@ -492,6 +493,9 @@ install_app "Davinci Resolve" 571213070
 
 # Install Bluebook
 install_app "Bluebook" 1645016851
+
+# Install Microsoft Remote Desktop
+install_app "Microsoft Remote Desktop" 1295203466
 
 # Install Docker
 install_docker
