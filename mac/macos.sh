@@ -81,6 +81,14 @@ install_mas() {
     fi
 }
 
+# Function to install Homebrew
+install_homebrew() {
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  (echo; echo 'eval "$(/opt/homebrew/bin/brew shellenv)"') >> /Users/devarshishimpi/.zprofile
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+}
+
+
 # Check if Homebrew is installed
 if command -v brew &>/dev/null; then
     echo -e "${GREEN}Homebrew is already installed.${NC}"
@@ -95,61 +103,45 @@ else
     install_mas
 fi
 
-# Check if mongodb/brew is tapped and update it
-if brew tap | grep -q 'mongodb/brew'; then
-    echo -e "${GREEN}mongodb/brew tap is already added.${NC}"
-else
-    local tap_choice
-    echo -e -n "${YELLOW}Do you want to tap 'mongodb/brew'? (yes/no)${NC} "
-    read -r -n 3 tap_choice
-    if [ "$tap_choice" = "yes" ] || [ "$tap_choice" = "y" ]; then
-        brew tap mongodb/brew
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}mongodb/brew tap added.${NC}"
-            echo -e "${GREEN}Updating mongodb/brew...${NC}"
-            brew update
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}mongodb/brew update successful.${NC}"
-            else
-                echo -e "${RED}Failed to update mongodb/brew. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to tap mongodb/brew. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping mongodb/brew tap and update...${NC}"
-    fi
-fi
+# Define the list of taps to install
+tap_list=(
+    "mongodb/brew"
+    "teamookla/speedtest"
+)
 
-# Check if teamookla/speedtest is tapped and update it
-if brew tap | grep -q 'teamookla/speedtest'; then
-    echo -e "${GREEN}teamookla/speedtest tap is already added.${NC}"
-else
-    local speedtest_tap_choice
-    echo -e -n "${YELLOW}Do you want to tap 'teamookla/speedtest'? (yes/no)${NC} "
-    read -r -n 3 speedtest_tap_choice
-    if [ "$speedtest_tap_choice" = "yes" ] || [ "$speedtest_tap_choice" = "y" ]; then
-        brew tap teamookla/speedtest
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}teamookla/speedtest tap added.${NC}"
-            echo -e "${GREEN}Updating teamookla/speedtest...${NC}"
-            brew update
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}teamookla/speedtest update successful.${NC}"
+# Function to prompt for brew tap installation
+prompt_install_tap() {
+    local item="$1"
+    while true; do
+        read -p "Do you want to tap the following cask $item? (yes/no) " yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+}
+
+# Function to tap brew repositories
+tap_brew_repos() {
+    local tap
+    for tap in "${tap_list[@]}"; do
+        if prompt_install_tap "$tap"; then
+            echo -e "${GREEN}Tapping $tap...${NC}"
+            if brew tap "$tap"; then
+                echo -e "${GREEN}$tap tap successful.${NC}"
             else
-                echo -e "${RED}Failed to update teamookla/speedtest. Exiting.${NC}"
+                echo -e "${RED}Failed to tap $tap. Exiting.${NC}"
                 exit 1
             fi
         else
-            echo -e "${RED}Failed to tap teamookla/speedtest. Exiting.${NC}"
-            exit 1
+            echo -e "${RED}Skipping tap of $tap...${NC}"
         fi
-    else
-        echo -e "${RED}Skipping teamookla/speedtest tap and update...${NC}"
-    fi
-fi
+    done
+}
+
+# Prompt for and tap brew repositories
+tap_brew_repos
 
 # Define the list of software to install
 software_list=(
@@ -215,6 +207,7 @@ prompt_install_gui() {
 }
 
 software_list_gui=(
+    "mongodb-compass"
     "tor-browser"
     "obs"
     "notion"
