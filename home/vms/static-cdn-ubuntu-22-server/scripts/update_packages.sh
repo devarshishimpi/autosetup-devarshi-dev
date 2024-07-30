@@ -11,11 +11,11 @@ update_packages() {
     echo -e "${YELLOW}SOURCES_LIST="/etc/apt/sources.list"${NC}"
     SOURCES_LIST="/etc/apt/sources.list"
 
-    echo -e "${YELLOW}rm -rf $SOURCES_LIST${NC}"
-    rm -rf $SOURCES_LIST
+    echo -e "${YELLOW}sudo rm -rf $SOURCES_LIST${NC}"
+    sudo rm -rf $SOURCES_LIST
 
-    echo -e "${YELLOW}touch $SOURCES_LIST${NC}"
-    touch $SOURCES_LIST
+    echo -e "${YELLOW}sudo touch $SOURCES_LIST${NC}"
+    sudo touch $SOURCES_LIST
 
     echo -e "${YELLOW}sudo apt update${NC}"
     sudo apt update
