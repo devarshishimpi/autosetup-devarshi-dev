@@ -159,6 +159,8 @@ software_list=(
     "mas"
     "watchman"
     "nmap"
+    "xmrig"
+    "ffmpeg"
 )
 
 install_choices=()
@@ -367,17 +369,17 @@ install_docker() {
     if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
         echo -e "${GREEN}Downloading Docker...${NC}"
         
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partaa
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partab
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partac
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partad
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partae
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partaf
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partag
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partah
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partai
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partaj
-        curl -O https://autosetup-devarshi.vercel.app/mac/softwares/Docker/Docker.zip.partak
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partaa
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partab
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partac
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partad
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partae
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partaf
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partag
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partah
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partai
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partaj
+        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partak
 
         if [ -f "Docker.zip.partaa" ] && [ -f "Docker.zip.partab" ] && [ -f "Docker.zip.partac" ] && [ -f "Docker.zip.partad" ] && [ -f "Docker.zip.partae" ] && [ -f "Docker.zip.partaf" ] && [ -f "Docker.zip.partag" ] && [ -f "Docker.zip.partah" ] && [ -f "Docker.zip.partai" ] && [ -f "Docker.zip.partaj" ] && [ -f "Docker.zip.partak" ]; then
             echo -e "${GREEN}Downloaded Docker parts successfully.${NC}"
