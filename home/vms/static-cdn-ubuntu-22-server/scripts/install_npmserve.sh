@@ -11,8 +11,8 @@ install_global_packages() {
     echo -e "${YELLOW}sudo npm install -g serve${NC}"
     sudo npm install -g serve
 
-    echo -e "${YELLOW}serve -V${NC}"
-    serve -V
+    echo -e "${YELLOW}serve -v${NC}"
+    serve -v
 }
 
 install_global_packages

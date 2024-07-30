@@ -8,8 +8,8 @@ NC='\033[0m' # No Color
 
 # Configure to serve static files and start on boot
 configure_serve() {
-    echo -e "${YELLOW}serve -V${NC}"
-    serve -V
+    echo -e "${YELLOW}serve -v${NC}"
+    serve -v
 
     echo -e "${YELLOW}mkdir /home/devarshi/prod${NC}"
     mkdir -p /home/devarshi/prod

@@ -22,6 +22,9 @@ install_nodejs() {
 
     echo -e "${YELLOW}npm -v${NC}"
     npm -v
+
+    echo -e "${YELLOW}sudo rm -rf nodesource_setup.sh${NC}"
+    sudo rm -rf nodesource_setup.sh
 }
 
 install_nodejs

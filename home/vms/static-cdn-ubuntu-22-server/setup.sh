@@ -36,7 +36,7 @@ update_packages() {
             echo -e "${RED}Failed to download update_packages.sh${NC}"
         fi
     else
-        echo -e "${YELLOW}Skipping update system packages...${NC}"
+        echo -e "${RED}Skipping update system packages...${NC}"
     fi
 }
 
