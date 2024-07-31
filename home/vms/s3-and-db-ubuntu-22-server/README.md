@@ -95,9 +95,8 @@ chmod +x configure_minio_cdn_backup.sh
 ./configure_minio_cdn_backup.sh
 ```
 
-> [!NOTE]
+> [!IMPORTANT]
 > There are multiple environment variables that need to be set in the script. Please set them before running the script.
-> ```
 
 > [!TIP]
 > Check the systemctl status if the services are running as expected.

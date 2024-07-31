@@ -1,1 +1,1 @@
-# win-mac-linux-autosetup
+# AutoSetup Scripts
