@@ -26,9 +26,10 @@ chmod +x setup.sh
 > [!NOTE]
 > Environment Variables during setup script example:
 > ```bash
-> MINIO_IP="192.168.1.35"
+> MINIO_IP="192.168.1.41"
 > MINIO_ACCESS_KEY="minio"
 > MINIO_SECRET_KEY="minio123"
+> MINIO_BUCKET_NAME="static-assets"
 > ```
 
 > [!TIP]

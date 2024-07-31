@@ -149,12 +149,13 @@ configure_s3sync() {
     read -p "Enter MinIO IP Address (Without PORT and protocol): " MINIO_IP
     read -p "Enter MinIO Access Key: " MINIO_ACCESS_KEY
     read -p "Enter MinIO Secret Key: " MINIO_SECRET_KEY
+    read -p "Enter MinIO Local Bucket Name for Static CDN: " MINIO_BUCKET_NAME
 
     echo -e "${YELLOW}Creating bash script file for systemd...${NC}"
     sudo bash -c "cat <<EOF > /usr/local/bin/s3-sync.sh
 #!/bin/bash
 while true; do
-    aws s3 sync --endpoint-url http://${MINIO_IP}:9000 s3://static-devarshi-dev /home/devarshi/prod/static
+    aws s3 sync --endpoint-url http://${MINIO_IP}:9000 s3://${MINIO_BUCKET_NAME} /home/devarshi/prod/static
     sleep 60  # Sync every 60 seconds
 done
 EOF"
