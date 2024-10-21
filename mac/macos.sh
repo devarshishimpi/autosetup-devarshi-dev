@@ -158,6 +158,7 @@ software_list=(
     "git"
     "mas"
     "watchman"
+    "go"
     "nmap"
     "xmrig"
     "ffmpeg"

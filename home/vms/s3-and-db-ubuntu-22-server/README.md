@@ -73,7 +73,7 @@ chmod +x configure_minio.sh
 > [!NOTE]
 > The MinIO WebUI Dashboard with have the default credentials.
 > ```
-> username: minio
+> username: minioadmin
 > password: minioadmin
 > ```
 
