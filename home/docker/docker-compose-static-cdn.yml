@@ -32,10 +32,13 @@ services:
     image: minio/mc
     volumes:
       - ./static-devarshi-dev-cdn:/sync/static-devarshi-dev
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
     restart: always
     entrypoint: |
       /bin/sh -c '
-      mc alias set minio http://minio-s3:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD || exit 1;
+      mc alias set minio http://minio-s3:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD || exit 1;
       while true; do
         echo "Checking MinIO connection and starting sync at $$(date)";
         if mc ls minio/static-devarshi-dev; then
@@ -54,6 +57,8 @@ services:
       '
     networks:
       - internal
+    depends_on:
+      - minio-s3
 
   static-devarshi-dev-aws-backup:
     container_name: static-devarshi-dev-aws-backup
