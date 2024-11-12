@@ -1,7 +1,7 @@
 services:
   static-devarshi-dev-cdn:
     container_name: static-devarshi-dev-cdn
-    image: node:18-alpine
+    image: node:22-alpine
     working_dir: /app
     volumes:
       - ./static-devarshi-dev-cdn:/app/static-devarshi-dev
