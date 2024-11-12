@@ -1,0 +1,81 @@
+services:
+  static-devarshi-dev-cdn:
+    container_name: static-devarshi-dev-cdn
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - ./static-devarshi-dev-cdn:/app/static-devarshi-dev
+    ports:
+      - "8082:8082"
+    command: >
+      sh -c "npm install -g serve &&
+             cd static-devarshi-dev &&
+             serve -s . -l 8082"
+    environment:
+      - NODE_ENV=production
+    restart: always
+    networks:
+      - internal
+
+  static-devarshi-dev-cloudflared:
+    container_name: static-devarshi-dev-cloudflared
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_STATIC_DEVARSHI_DEV_TUNNEL_TOKEN}
+    restart: always
+    networks:
+      - internal
+    depends_on:
+      - static-devarshi-dev-cdn
+
+  static-devarshi-dev-minio-sync:
+    container_name: static-devarshi-dev-minio-sync
+    image: minio/mc
+    volumes:
+      - ./static-devarshi-dev-cdn:/sync/static-devarshi-dev
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set minio http://minio-s3:9000 \$MINIO_ROOT_USER \$MINIO_ROOT_PASSWORD || exit 1;
+        while true; do
+          echo 'Checking MinIO connection and starting sync at ' \$(date);
+          if mc ls minio/static-devarshi-dev; then
+            echo 'MinIO is accessible. Starting sync...';
+            if mc mirror --overwrite minio/static-devarshi-dev /sync/static-devarshi-dev; then
+              echo 'Sync completed successfully at ' \$(date);
+            else
+              echo 'Sync failed at ' \$(date);
+            fi
+          else
+            echo 'MinIO not accessible. Retrying in 10 seconds...';
+            sleep 10;
+          fi
+          sleep 60;
+        done"
+    networks:
+      - internal
+
+  static-devarshi-dev-aws-backup:
+    container_name: static-devarshi-dev-aws-backup
+    image: amazon/aws-cli
+    volumes:
+      - ./static-devarshi-dev-cdn:/sync/static-devarshi-dev
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_STATIC_DEVARSHI_DEV_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_STATIC_DEVARSHI_DEV_SECRET_KEY_ID}
+      - AWS_DEFAULT_REGION=ap-south-1
+    entrypoint: >
+      /bin/sh -c "
+        while true; do
+          echo 'Starting AWS S3 backup at ' \$(date);
+          if aws s3 cp /sync/static-devarshi-dev s3://static-devarshi-dev-backup --recursive; then
+            echo 'AWS S3 backup completed successfully at ' \$(date);
+          else
+            echo 'AWS S3 backup failed at ' \$(date);
+          fi
+          sleep 3600;
+        done"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
