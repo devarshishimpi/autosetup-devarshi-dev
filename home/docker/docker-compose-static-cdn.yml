@@ -57,8 +57,6 @@ services:
       '
     networks:
       - internal
-    depends_on:
-      - minio-s3
 
   static-devarshi-dev-aws-backup:
     container_name: static-devarshi-dev-aws-backup
