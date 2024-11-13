@@ -1,4 +1,4 @@
-# Windows 10 Host Setup
+# Windows 11 Host Setup
 
 ## Install VirtualBox
 
