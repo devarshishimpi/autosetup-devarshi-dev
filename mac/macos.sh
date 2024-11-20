@@ -239,6 +239,7 @@ software_list_gui=(
     "google-chrome"
     "brave-browser"
     "visual-studio-code"
+    "arc"
 )
 
 install_choices_gui=()
