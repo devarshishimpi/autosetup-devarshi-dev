@@ -1,0 +1,16 @@
+services:
+  networktools-hg:
+    image: honeygain/honeygain
+    container_name: networktools-hg
+    restart: always
+    command: >
+      -tou-accept
+      -email ${HG_EMAIL}
+      -pass ${HG_PASSWORD}
+      -device ${HG_DEVICE}
+    networks:
+      - hg-network
+
+networks:
+  hg-network:
+    driver: bridge
