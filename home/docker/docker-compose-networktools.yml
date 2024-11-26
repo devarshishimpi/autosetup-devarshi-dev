@@ -1,4 +1,16 @@
 services:
+  networktools-myst:
+    image: mysteriumnetwork/myst:latest
+    container_name: networktools-myst
+    cap_add:
+      - NET_ADMIN
+    restart: always
+    volumes:
+      - ./networktools-myst:/var/lib/mysterium-node
+    command: >
+      service --agreed-terms-and-conditions
+    network_mode: "host"
+
   networktools-hg:
     image: honeygain/honeygain
     container_name: networktools-hg
@@ -8,9 +20,25 @@ services:
       -email ${HG_EMAIL}
       -pass ${HG_PASSWORD}
       -device ${HG_DEVICE}
-    networks:
-      - hg-network
+    network_mode: "host"
 
-networks:
-  hg-network:
-    driver: bridge
+  networktools-tm:
+    image: traffmonetizer/cli_v2:arm64v8
+    container_name: networktools-tm
+    command: >
+      start accept --token ${TM_TOKEN} --device-name ${TM_DEVICE}
+    restart: always
+    network_mode: "host"
+
+  networktools-bitping:
+    image: bitping/bitpingd:latest
+    container_name: networktools-bitping
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./networktools-bitping:/root/.bitpingd
+    entrypoint: /app/bitpingd
+    command: >
+      sh -c "${BITPING_EMAIL:+login --email \"${BITPING_EMAIL}\" --password \"${BITPING_PASSWORD}\" && } /app/bitpingd start"
+    restart: always
+    network_mode: "host"
