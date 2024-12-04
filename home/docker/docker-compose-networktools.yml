@@ -1,15 +1,15 @@
 services:
-  # networktools-myst:
-  #   image: mysteriumnetwork/myst:latest
-  #   container_name: networktools-myst
-  #   cap_add:
-  #     - NET_ADMIN
-  #   restart: always
-  #   volumes:
-  #     - ./networktools-myst:/var/lib/mysterium-node
-  #   command: >
-  #     service --agreed-terms-and-conditions
-  #   network_mode: "host"
+  networktools-myst:
+    image: mysteriumnetwork/myst:latest
+    container_name: networktools-myst
+    cap_add:
+      - NET_ADMIN
+    restart: always
+    volumes:
+      - ./networktools-myst:/var/lib/mysterium-node
+    command: >
+      service --agreed-terms-and-conditions
+    network_mode: "host"
 
   networktools-hg:
     image: honeygain/honeygain
@@ -30,14 +30,16 @@ services:
     restart: always
     network_mode: "host"
 
-  # networktools-bitping:
-  #   image: bitping/bitpingd:latest
-  #   container_name: networktools-bitping
-  #   stdin_open: true
-  #   tty: true
-  #   volumes:
-  #     - ./networktools-bitping:/root/.bitpingd
-  #   command: >
-  #     sh -c "[ -n \"${BITPING_EMAIL}\" ] && [ -n \"${BITPING_PASSWORD}\" ] && login --email \"${BITPING_EMAIL}\" --password \"${BITPING_PASSWORD}\" || true; /app/bitpingd start"
-  #   restart: always
-  #   network_mode: "host"
+  networktools-bitping:
+    image: bitping/bitpingd:latest
+    container_name: networktools-bitping
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./networktools-bitping:/root/.bitpingd
+    environment:
+      - BITPING_EMAIL=${BITPING_EMAIL}
+      - BITPING_PASSWORD=${BITPING_PASSWORD}
+    command: /app/bitpingd start
+    restart: always
+    network_mode: "host"
