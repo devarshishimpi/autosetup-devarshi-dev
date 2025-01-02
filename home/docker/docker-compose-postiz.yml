@@ -50,6 +50,13 @@ services:
     depends_on:
       - post-devarshi-dev-postiz
 
+volumes:
+  postiz-config:
+    external: false
+ 
+  postiz-uploads:
+    external: false
+
 networks:
   postiz:
     driver: bridge
