@@ -23,7 +23,7 @@ services:
     network_mode: "host"
 
   networktools-tm:
-    image: traffmonetizer/cli_v2:arm64v8
+    image: traffmonetizer/cli_v2:arm64v8 # replace with latest tag for x86_64
     container_name: networktools-tm
     command: >
       start accept --token ${TM_TOKEN} --device-name ${TM_DEVICE}

@@ -1,0 +1,55 @@
+services:
+  post-devarshi-dev-postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    container_name: post-devarshi-dev-postiz
+    restart: always
+    environment:
+      # You must change these. Replace `postiz.your-server.com` with your DNS name - what your web browser sees.
+      MAIN_URL: ${POST_DEVARSHI_DEV_MAIN_URL}
+      FRONTEND_URL: ${POST_DEVARSHI_DEV_FRONTEND_URL}
+      NEXT_PUBLIC_BACKEND_URL: ${POST_DEVARSHI_DEV_NEXT_PUBLIC_BACKEND_URL}
+      JWT_SECRET: ${POST_DEVARSHI_DEV_JWT_SECRET}
+      # These defaults are probably fine, but if you change your user/password, update it in the
+      # postiz-postgres or postiz-redis services below.
+      DATABASE_URL: ${POST_DEVARSHI_DEV_DATABASE_URL}
+      REDIS_URL: ${POST_DEVARSHI_DEV_REDIS_URL}
+      BACKEND_INTERNAL_URL: ${POST_DEVARSHI_DEV_BACKEND_INTERNAL_URL}
+      IS_GENERAL: ${POST_DEVARSHI_DEV_IS_GENERAL} # Required for self-hosting.
+      # The container images are pre-configured to use /uploads for file storage.
+      # You probably should not change this unless you have a really good reason!
+      STORAGE_PROVIDER: ${POST_DEVARSHI_DEV_STORAGE_PROVIDER}
+      UPLOAD_DIRECTORY: ${POST_DEVARSHI_DEV_UPLOAD_DIRECTORY}
+      NEXT_PUBLIC_UPLOAD_DIRECTORY: ${POST_DEVARSHI_DEV_NEXT_PUBLIC_UPLOAD_DIRECTORY}
+      CLOUDFLARE_ACCOUNT_ID: ${POST_DEVARSHI_DEV_CLOUDFLARE_ACCOUNT_ID}
+      CLOUDFLARE_ACCESS_KEY: ${POST_DEVARSHI_DEV_CLOUDFLARE_ACCESS_KEY}
+      CLOUDFLARE_SECRET_ACCESS_KEY: ${POST_DEVARSHI_DEV_CLOUDFLARE_SECRET_ACCESS_KEY}
+      CLOUDFLARE_BUCKETNAME: ${POST_DEVARSHI_DEV_CLOUDFLARE_BUCKETNAME}
+      CLOUDFLARE_REGION: ${POST_DEVARSHI_DEV_CLOUDFLARE_REGION}
+      CLOUDFLARE_BUCKET_URL: ${POST_DEVARSHI_DEV_CLOUDFLARE_BUCKET_URL}
+      EMAIL_PROVIDER: ${POST_DEVARSHI_DEV_EMAIL_PROVIDER}
+      RESEND_API_KEY: ${POST_DEVARSHI_DEV_RESEND_API_KEY}
+      X_API_KEY: ${POST_DEVARSHI_DEV_X_API_KEY}
+      X_API_SECRET: ${POST_DEVARSHI_DEV_X_API_SECRET}
+      LINKEDIN_CLIENT_ID: ${POST_DEVARSHI_DEV_LINKEDIN_CLIENT_ID}
+      LINKEDIN_CLIENT_SECRET: ${POST_DEVARSHI_DEV_LINKEDIN_CLIENT_SECRET}
+    volumes:
+      - postiz-config:/config/
+      - postiz-uploads:/uploads/
+    ports:
+      - 5000:5000
+    networks:
+      - postiz
+  
+  post-devarshi-dev-cloudflared:
+    container_name: post-devarshi-dev-cloudflared
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_POST_DEVARSHI_DEV_TUNNEL_TOKEN}
+    restart: always
+    networks:
+      - postiz
+    depends_on:
+      - post-devarshi-dev-postiz
+
+networks:
+  postiz:
+    driver: bridge
