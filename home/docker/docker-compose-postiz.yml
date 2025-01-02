@@ -59,4 +59,4 @@ volumes:
 
 networks:
   postiz:
-    driver: bridge
+    external: false
