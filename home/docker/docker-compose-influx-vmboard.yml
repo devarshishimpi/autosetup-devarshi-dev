@@ -1,0 +1,33 @@
+services:
+  influx-vmboard-dev:
+    container_name: influx-vmboard-dev
+    image: influxdb:2.7
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb-data:/var/lib/influxdb2
+      - ./influxdb-config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUX_VMBOARD_DEV_ADMIN_USER:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUX_VMBOARD_DEV_ADMIN_PASSWORD:-adminpassword}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUX_VMBOARD_DEV_ORG:-myorg}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUX_VMBOARD_DEV_BUCKET:-mybucket}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUX_VMBOARD_DEV_ADMIN_TOKEN:-mytoken}
+    restart: always
+    networks:
+      - internal
+  
+  influx-vmboard-dev-cloudflared:
+    container_name: influx-vmboard-dev-cloudflared
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_INFLUX_VMBOARD_DEV_TUNNEL_TOKEN}
+    restart: always
+    networks:
+      - internal
+    depends_on:
+      - influx-vmboard-dev
+
+networks:
+  internal:
+    driver: bridge
