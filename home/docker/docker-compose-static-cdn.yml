@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   static-devarshi-dev-cdn:
     container_name: static-devarshi-dev-cdn
@@ -20,6 +22,8 @@ services:
   static-devarshi-dev-cloudflared:
     container_name: static-devarshi-dev-cloudflared
     image: cloudflare/cloudflared:latest
+    environment:
+      - CLOUDFLARE_STATIC_DEVARSHI_DEV_TUNNEL_TOKEN=${CLOUDFLARE_STATIC_DEVARSHI_DEV_TUNNEL_TOKEN}
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_STATIC_DEVARSHI_DEV_TUNNEL_TOKEN}
     restart: always
     networks:
@@ -33,23 +37,20 @@ services:
     volumes:
       - ./static-devarshi-dev-cdn:/sync/static-devarshi-dev
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     restart: always
     entrypoint: |
       /bin/sh -c '
-      mc alias set minio http://minio-s3:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD || exit 1;
+      mc alias set minio http://minio-s3:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} || exit 1;
       while true; do
-        echo "Checking MinIO connection and starting sync at $$(date)";
+        echo "Checking MinIO and syncing at $$(date)";
         if mc ls minio/static-devarshi-dev; then
-          echo "MinIO is accessible. Starting sync...";
-          if mc mirror --overwrite minio/static-devarshi-dev /sync/static-devarshi-dev; then
-            echo "Sync completed successfully at $$(date)";
-          else
-            echo "Sync failed at $$(date)";
-          fi
+          mc mirror --overwrite minio/static-devarshi-dev /sync/static-devarshi-dev \
+            && echo "Sync succeeded at $$(date)" \
+            || echo "Sync failed at $$(date)";
         else
-          echo "MinIO not accessible. Retrying in 10 seconds...";
+          echo "MinIO not reachable; retrying in 10s";
           sleep 10;
         fi
         sleep 60;
@@ -58,28 +59,22 @@ services:
     networks:
       - internal
 
-  static-devarshi-dev-aws-backup:
-    container_name: static-devarshi-dev-aws-backup
+  static-devarshi-dev-r2-backup:
+    container_name: static-devarshi-dev-r2-backup
     image: amazon/aws-cli
+    environment:
+      - AWS_ACCESS_KEY_ID=${R2_STATIC_DEVARSHI_DEV_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${R2_STATIC_DEVARSHI_DEV_SECRET_KEY_ID}
+      - AWS_DEFAULT_REGION=auto
+      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID}
     volumes:
       - ./static-devarshi-dev-cdn:/sync/static-devarshi-dev
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_STATIC_DEVARSHI_DEV_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_STATIC_DEVARSHI_DEV_SECRET_KEY_ID}
-      - AWS_DEFAULT_REGION=ap-south-1
+      - ./static-devarshi-dev-r2-backup.sh:/usr/local/bin/static-devarshi-dev-r2-backup.sh:ro
     restart: always
-    entrypoint: |
-      /bin/sh -c '
-      while true; do
-        echo "Starting AWS S3 backup at $$(date)";
-        if aws s3 cp /sync/static-devarshi-dev s3://static-devarshi-dev-backup --recursive; then
-          echo "AWS S3 backup completed successfully at $$(date)";
-        else
-          echo "AWS S3 backup failed at $$(date)";
-        fi
-        sleep 3600;
-      done
-      '
+    entrypoint:
+      - "/usr/bin/env"
+      - "bash"
+      - "/usr/local/bin/static-devarshi-dev-r2-backup.sh"
     networks:
       - internal
 

@@ -162,6 +162,14 @@ software_list=(
     "nmap"
     "xmrig"
     "ffmpeg"
+    "pkg-config"
+    "cairo"
+    "pango"
+    "libpng"
+    "jpeg"
+    "giflib"
+    "librsvg"
+    "pixman"
 )
 
 install_choices=()
@@ -306,6 +314,7 @@ software_list_npm=(
     "@vscode/vsce"
     "create-next-app"
     "prettier"
+    "@anthropic-ai/claude-code"
 )
 
 install_choices_npm=()
