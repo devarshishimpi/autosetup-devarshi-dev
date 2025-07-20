@@ -28,6 +28,9 @@ services:
     restart: always
     networks:
       - internal
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       - static-devarshi-dev-cdn
 

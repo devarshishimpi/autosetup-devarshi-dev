@@ -46,6 +46,9 @@ services:
     restart: always
     networks:
       - postiz
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       - post-devarshi-dev-postiz
 

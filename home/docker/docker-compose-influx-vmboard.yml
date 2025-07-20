@@ -27,6 +27,9 @@ services:
       - internal
     depends_on:
       - influx-vmboard-dev
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
 
 networks:
   internal:
