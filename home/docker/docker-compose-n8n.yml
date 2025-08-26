@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  n8n-devarshi-dev:
+    container_name: n8n-devarshi-dev
+    image: docker.n8n.io/n8nio/n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${N8N_DEVARSHI_DEV_DB_POSTGRESDB_HOST}
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${N8N_DEVARSHI_DEV_DB_POSTGRESDB_DATABASE}
+      - DB_POSTGRESDB_USER=${N8N_DEVARSHI_DEV_DB_POSTGRESDB_USER}
+      - DB_POSTGRESDB_PASSWORD=${N8N_DEVARSHI_DEV_DB_POSTGRESDB_PASSWORD}
+      - DB_POSTGRESDB_SSL_ENABLED=true
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}
+      - N8N_PROTOCOL=https
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_TRUST_PROXY=true
+    volumes:
+      - n8n-devarshi-dev-data:/home/node/.n8n
+    restart: always
+    networks:
+      - internal
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    platform: linux/arm64
+
+  n8n-devarshi-dev-cloudflared:
+    container_name: n8n-devarshi-dev-cloudflared
+    image: cloudflare/cloudflared:latest
+    environment:
+      - CLOUDFLARE_N8N_DEVARSHI_DEV_TUNNEL_TOKEN=${CLOUDFLARE_N8N_DEVARSHI_DEV_TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_N8N_DEVARSHI_DEV_TUNNEL_TOKEN}
+    restart: always
+    networks:
+      - internal
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    depends_on:
+      - n8n-devarshi-dev
+    platform: linux/arm64
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  n8n-devarshi-dev-data:
