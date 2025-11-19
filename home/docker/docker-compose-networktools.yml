@@ -29,17 +29,3 @@ services:
       start accept --token ${TM_TOKEN} --device-name ${TM_DEVICE}
     restart: always
     network_mode: "host"
-
-  networktools-bitping:
-    image: bitping/bitpingd:latest
-    container_name: networktools-bitping
-    stdin_open: true
-    tty: true
-    volumes:
-      - ./networktools-bitping:/root/.bitpingd
-    environment:
-      - BITPING_EMAIL=${BITPING_EMAIL}
-      - BITPING_PASSWORD=${BITPING_PASSWORD}
-    command: /app/bitpingd start
-    restart: always
-    network_mode: "host"
