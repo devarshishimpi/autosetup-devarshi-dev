@@ -219,6 +219,7 @@ prompt_install_gui() {
 
 software_list_gui=(
     "mongodb-compass"
+    "pgadmin4"
     "tor-browser"
     "obs"
     "notion"
@@ -236,6 +237,7 @@ software_list_gui=(
     "sourcetree"
     "free-download-manager"
     "zed"
+    "antigravity"
     "codux"
     "redisinsight"
     "protonvpn"
