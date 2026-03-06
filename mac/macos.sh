@@ -1,516 +1,517 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Define text colors
+set -Eeuo pipefail
+IFS=$'\n\t'
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Function to ask for sudo password and run a command with sudo
-run_with_sudo() {
-    echo -e "${YELLOW}Please enter your sudo password to continue. ${NC}"
-    if sudo -v; then
-        echo -e "${GREEN}Sudo access granted.${NC}"
-    else
-        echo -e "${RED}Failed to get sudo access. Exiting.${NC}"
-        exit 1
-    fi
+if [[ ! -t 1 ]]; then
+  RED=''
+  GREEN=''
+  YELLOW=''
+  NC=''
+fi
+
+FAILED_ITEMS=()
+
+log_info() {
+  printf '%b%s%b\n' "$YELLOW" "$1" "$NC"
 }
 
-# Ask the user for the sudo password and run the commands with sudo
-run_with_sudo
-
-# Function to prompt user for installation
-prompt_install() {
-    local software_name="$1"
-    local choice
-    echo -e -n "${YELLOW}Do you want to install $software_name? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        return 0
-    else
-        return 1
-    fi
+log_success() {
+  printf '%b%s%b\n' "$GREEN" "$1" "$NC"
 }
 
-# Function to handle the installation of Node.js
-install_node() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install Node.js (node)? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing Node.js (node)...${NC}"
-        if brew install node; then
-            echo -e "${GREEN}Node.js (node) installation successful.${NC}"
-
-            # Add Node.js (node) to the PATH and set environment variables
-			echo -e "${YELLOW}Adding Node.js (node) to the PATH and set environment variables${NC}"
-            echo 'export PATH="/opt/homebrew/opt/node/bin:$PATH"' >> ~/.zshrc
-            export LDFLAGS="-L/opt/homebrew/opt/node/lib"
-            export CPPFLAGS="-I/opt/homebrew/opt/node/include"
-            sudo chown -R $(whoami) ~/.npm
-            sudo chown -R $(whoami) /usr/local/lib/node_modules
-			echo -e "${GREEN}Successfully added Node.js (node) to the PATH and set environment variables${NC}"
-        else
-            echo -e "${RED}Failed to install Node.js (node). Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Node.js (node) installation...${NC}"
-    fi
+log_warn() {
+  printf '%b%s%b\n' "$YELLOW" "$1" "$NC"
 }
 
-# Function to install mas (Mac App Store command-line interface)
-install_mas() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install mas (Mac App Store command-line interface)? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing mas...${NC}"
-
-        # Install mas using Homebrew
-        if brew install mas; then
-            echo -e "${GREEN}mas installation successful.${NC}"
-        else
-            echo -e "${RED}Failed to install mas. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}mas (Mac App Store command-line interface) is required for this script. Exiting.${NC}"
-        exit 1
-    fi
+log_error() {
+  printf '%b%s%b\n' "$RED" "$1" "$NC" >&2
 }
 
-# Function to install Homebrew
+record_failure() {
+  FAILED_ITEMS+=("$1")
+}
+
+confirm() {
+  local prompt="$1"
+  local response normalized
+
+  while true; do
+    if ! read -r -p "$(printf '%b%s%b' "$YELLOW" "$prompt [y/N]: " "$NC")" response; then
+      printf '\n'
+      return 1
+    fi
+    normalized="$(printf '%s' "$response" | tr '[:upper:]' '[:lower:]')"
+
+    case "$normalized" in
+      y|yes) return 0 ;;
+      n|no|'') return 1 ;;
+      *) log_warn "Please answer yes or no." ;;
+    esac
+  done
+}
+
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    log_error "Missing required command: $cmd"
+    exit 1
+  fi
+}
+
+append_line_if_missing() {
+  local file_path="$1"
+  local line="$2"
+
+  touch "$file_path"
+  if ! grep -Fqx "$line" "$file_path"; then
+    printf '%s\n' "$line" >> "$file_path"
+  fi
+}
+
 install_homebrew() {
+  require_command curl
+
+  log_info "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  (echo; echo 'eval "$(/opt/homebrew/bin/brew shellenv)"') >> /Users/devarshishimpi/.zprofile
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    append_line_if_missing "$HOME/.zprofile" 'eval "$(/opt/homebrew/bin/brew shellenv)"'
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+    append_line_if_missing "$HOME/.zprofile" 'eval "$(/usr/local/bin/brew shellenv)"'
+  else
+    log_error "Homebrew install finished, but brew binary was not found."
+    exit 1
+  fi
+
+  log_success "Homebrew installation successful."
 }
 
+ensure_homebrew() {
+  if command -v brew >/dev/null 2>&1; then
+    log_success "Homebrew is already installed."
+    return 0
+  fi
 
-# Check if Homebrew is installed
-if command -v brew &>/dev/null; then
-    echo -e "${GREEN}Homebrew is already installed.${NC}"
-else
-    install_homebrew
+  install_homebrew
+}
+
+install_formula() {
+  local formula="$1"
+
+  if brew list --formula "$formula" >/dev/null 2>&1; then
+    log_success "$formula is already installed."
+    return 0
+  fi
+
+  log_info "Installing $formula..."
+  if brew install "$formula"; then
+    log_success "$formula installation successful."
+    return 0
+  fi
+
+  log_error "Failed to install $formula."
+  return 1
+}
+
+install_cask() {
+  local cask="$1"
+
+  if brew list --cask "$cask" >/dev/null 2>&1; then
+    log_success "$cask is already installed."
+    return 0
+  fi
+
+  log_info "Installing $cask..."
+  if brew install --cask "$cask"; then
+    log_success "$cask installation successful."
+    return 0
+  fi
+
+  log_error "Failed to install $cask."
+  return 1
+}
+
+install_npm_package() {
+  local pkg="$1"
+
+  if npm ls -g --depth=0 "$pkg" >/dev/null 2>&1; then
+    log_success "$pkg is already installed globally."
+    return 0
+  fi
+
+  log_info "Installing npm package $pkg..."
+  if npm install -g "$pkg"; then
+    log_success "$pkg installation successful."
+    return 0
+  fi
+
+  log_error "Failed to install npm package $pkg."
+  return 1
+}
+
+tap_brew_repo() {
+  local tap="$1"
+
+  if brew tap | grep -Fxq "$tap"; then
+    log_success "$tap is already tapped."
+    return 0
+  fi
+
+  log_info "Tapping $tap..."
+  if brew tap "$tap"; then
+    log_success "$tap tap successful."
+    return 0
+  fi
+
+  log_error "Failed to tap $tap."
+  return 1
+}
+
+ensure_mas_available() {
+  if command -v mas >/dev/null 2>&1; then
+    return 0
+  fi
+
+  log_warn "mas is required for Mac App Store installs."
+  if ! confirm "Install mas with Homebrew now?"; then
+    return 1
+  fi
+
+  install_formula "mas"
+}
+
+ensure_mas_signed_in() {
+  if mas account >/dev/null 2>&1; then
+    return 0
+  fi
+
+  log_warn "No App Store account detected for mas. Skipping Mac App Store installs."
+  return 1
+}
+
+install_mas_app() {
+  local app_name="$1"
+  local app_id="$2"
+
+  if ! confirm "Do you want to install $app_name from the Mac App Store?"; then
+    log_warn "Skipping $app_name."
+    return 0
+  fi
+
+  if mas list | awk '{print $1}' | grep -Fxq "$app_id"; then
+    log_success "$app_name is already installed."
+    return 0
+  fi
+
+  log_info "Installing $app_name from the Mac App Store..."
+  if mas install "$app_id"; then
+    log_success "$app_name installation successful."
+    return 0
+  fi
+
+  log_error "Failed to install $app_name."
+  return 1
+}
+
+install_docker() {
+  if ! confirm "Do you want to install Docker Desktop?"; then
+    log_warn "Skipping Docker installation."
+    return 0
+  fi
+
+  require_command curl
+  require_command unzip
+  require_command hdiutil
+
+  local docker_base_url="https://autosetup.devarshi.dev/mac/softwares/Docker"
+  local parts=(aa ab ac ad ae af ag ah ai aj ak)
+  local tmp_dir dmg_path
+
+  tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/docker-install.XXXXXX")"
+  dmg_path="$tmp_dir/Docker.dmg"
+
+  log_info "Downloading Docker installer parts..."
+  for part in "${parts[@]}"; do
+    if ! curl -fL "$docker_base_url/Docker.zip.part$part" -o "$tmp_dir/Docker.zip.part$part"; then
+      log_error "Failed to download Docker.zip.part$part"
+      rm -rf "$tmp_dir"
+      return 1
+    fi
+  done
+
+  log_info "Combining Docker installer parts..."
+  if ! cat "$tmp_dir"/Docker.zip.part* > "$tmp_dir/Docker.zip"; then
+    log_error "Failed to combine Docker installer parts."
+    rm -rf "$tmp_dir"
+    return 1
+  fi
+
+  log_info "Extracting Docker installer..."
+  if ! unzip -o "$tmp_dir/Docker.zip" -d "$tmp_dir" >/dev/null; then
+    log_error "Failed to unzip Docker installer."
+    rm -rf "$tmp_dir"
+    return 1
+  fi
+
+  if [[ ! -f "$dmg_path" ]]; then
+    log_error "Docker.dmg not found after extraction."
+    rm -rf "$tmp_dir"
+    return 1
+  fi
+
+  log_info "Mounting Docker image and installing app..."
+  if ! sudo -v; then
+    log_error "Failed to acquire sudo access for Docker install."
+    rm -rf "$tmp_dir"
+    return 1
+  fi
+
+  if ! hdiutil attach "$dmg_path" -nobrowse >/dev/null; then
+    log_error "Failed to mount Docker.dmg."
+    rm -rf "$tmp_dir"
+    return 1
+  fi
+
+  if ! sudo cp -R "/Volumes/Docker/Docker.app" /Applications/; then
+    log_error "Failed to copy Docker.app to /Applications."
+    hdiutil detach "/Volumes/Docker" >/dev/null 2>&1 || true
+    rm -rf "$tmp_dir"
+    return 1
+  fi
+
+  if ! hdiutil detach "/Volumes/Docker" >/dev/null; then
+    log_warn "Docker volume could not be detached automatically."
+  fi
+
+  rm -rf "$tmp_dir"
+  log_success "Docker installed successfully."
+}
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  log_error "This script is intended for macOS only."
+  exit 1
 fi
 
-# Check if mas (Mac App Store command-line interface) is installed
-if command -v mas &>/dev/null; then
-    echo -e "${GREEN}mas is already installed.${NC}"
-else
-    install_mas
-fi
+ensure_homebrew
 
-# Define the list of taps to install
 tap_list=(
-    "mongodb/brew"
-    "teamookla/speedtest"
+  "mongodb/brew"
+  "teamookla/speedtest"
 )
 
-# Function to prompt for brew tap installation
-prompt_install_tap() {
-    local item="$1"
-    while true; do
-        read -p "Do you want to tap the following cask $item? (yes/no) " yn
-        case $yn in
-            [Yy]* ) return 0;;
-            [Nn]* ) return 1;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
-}
+for tap in "${tap_list[@]}"; do
+  if confirm "Do you want to tap repository $tap?"; then
+    if ! tap_brew_repo "$tap"; then
+      record_failure "tap:$tap"
+    fi
+  else
+    log_warn "Skipping tap for $tap."
+  fi
+done
 
-# Function to tap brew repositories
-tap_brew_repos() {
-    local tap
-    for tap in "${tap_list[@]}"; do
-        if prompt_install_tap "$tap"; then
-            echo -e "${GREEN}Tapping $tap...${NC}"
-            if brew tap "$tap"; then
-                echo -e "${GREEN}$tap tap successful.${NC}"
-            else
-                echo -e "${RED}Failed to tap $tap. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Skipping tap of $tap...${NC}"
-        fi
-    done
-}
-
-# Prompt for and tap brew repositories
-tap_brew_repos
-
-# Define the list of software to install
 software_list=(
-    "node"
-    "speedtest"
-    "python@3.12"
-    "htop"
-    "doctl"
-    "ca-certificates"
-    "mongodb-community@7.0"
-    "mongosh"
-    "gcc"
-    "wget"
-    "git"
-    "mas"
-    "watchman"
-    "go"
-    "nmap"
-    "xmrig"
-    "ffmpeg"
-    "pkg-config"
-    "cairo"
-    "pango"
-    "libpng"
-    "jpeg"
-    "giflib"
-    "librsvg"
-    "pixman"
+  "node"
+  "speedtest"
+  "python@3.12"
+  "htop"
+  "doctl"
+  "ca-certificates"
+  "mongodb-community@7.0"
+  "mongosh"
+  "gcc"
+  "wget"
+  "git"
+  "mas"
+  "watchman"
+  "go"
+  "nmap"
+  "xmrig"
+  "ffmpeg"
+  "pkg-config"
+  "cairo"
+  "pango"
+  "libpng"
+  "jpeg"
+  "giflib"
+  "librsvg"
+  "pixman"
 )
 
 install_choices=()
 for software in "${software_list[@]}"; do
-    if [ "$software" = "node@21" ]; then
-        install_node
-    else
-        if prompt_install "$software"; then
-            install_choices+=("$software")
-        else
-            echo -e "${RED}Skipping installation of $software...${NC}"
-        fi
-    fi
+  if confirm "Do you want to install $software?"; then
+    install_choices+=("$software")
+  else
+    log_warn "Skipping $software."
+  fi
 done
 
-# Perform the selected installations
-if [ ${#install_choices[@]} -gt 0 ]; then
-    echo -e "${GREEN}Installing selected software...${NC}"
-    for software in "${install_choices[@]}"; do
-        echo -e "${GREEN}Installing $software...${NC}"
-        if brew install "$software"; then
-            echo -e "${GREEN}$software installation successful.${NC}"
-        else
-            echo -e "${RED}Failed to install $software. Exiting.${NC}"
-            exit 1
-        fi
-    done
+if [[ ${#install_choices[@]} -gt 0 ]]; then
+  log_info "Installing selected Homebrew formulae..."
+  for software in "${install_choices[@]}"; do
+    if ! install_formula "$software"; then
+      record_failure "formula:$software"
+    fi
+  done
 else
-    echo -e "${YELLOW}No software selected for installation.${NC}"
+  log_info "No Homebrew formula selected."
 fi
 
-#prompt for brew cash softwares
-echo -e "${YELLOW}Installing Brew Cask softwares.${NC}"
-
-# Function to prompt user for gui installation
-prompt_install_gui() {
-    local software_name_gui="$1"
-    local choice
-    echo -e -n "${YELLOW}Do you want to install $software_name_gui? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
 software_list_gui=(
-    "mongodb-compass"
-    "pgadmin4"
-    "tor-browser"
-    "obs"
-    "notion"
-    "vlc"
-    "cloudflare-warp"
-    "openvpn-connect"
-    "figma"
-    "spotify"
-    "zoom"
-    "discord"
-    "utm"
-    "nomachine"
-    "anydesk"
-    "gather"
-    "sourcetree"
-    "free-download-manager"
-    "zed"
-    "antigravity"
-    "codux"
-    "redisinsight"
-    "protonvpn"
-    "cyberduck"
-    "postman"
-    "github"
-    "microsoft-edge"
-    "firefox"
-    "google-chrome"
-    "brave-browser"
-    "visual-studio-code"
-    "arc"
+  "mongodb-compass"
+  "pgadmin4"
+  "tor-browser"
+  "obs"
+  "notion"
+  "vlc"
+  "cloudflare-warp"
+  "openvpn-connect"
+  "figma"
+  "spotify"
+  "zoom"
+  "discord"
+  "utm"
+  "nomachine"
+  "anydesk"
+  "gather"
+  "sourcetree"
+  "free-download-manager"
+  "zed"
+  "antigravity"
+  "codux"
+  "redisinsight"
+  "protonvpn"
+  "cyberduck"
+  "postman"
+  "github"
+  "microsoft-edge"
+  "firefox"
+  "google-chrome"
+  "brave-browser"
+  "visual-studio-code"
+  "arc"
 )
 
 install_choices_gui=()
 for software_gui in "${software_list_gui[@]}"; do
-    if prompt_install_gui "$software_gui"; then
-        install_choices_gui+=("$software_gui")
-    else
-        echo -e "${RED}Skipping installation of $software_gui...${NC}"
-    fi
+  if confirm "Do you want to install $software_gui?"; then
+    install_choices_gui+=("$software_gui")
+  else
+    log_warn "Skipping $software_gui."
+  fi
 done
 
-# Perform the selected gui installations
-if [ ${#install_choices_gui[@]} -gt 0 ]; then
-    echo -e "${GREEN}Installing selected GUI software...${NC}"
-    for software_gui in "${install_choices_gui[@]}"; do
-        echo -e "${GREEN}Installing $software_gui...${NC}"
-        if brew install --cask "$software_gui"; then
-            echo -e "${GREEN}$software_gui installation successful.${NC}"
-        else
-            echo -e "${RED}Failed to install $software_gui. Exiting.${NC}"
-            exit 1
-        fi
-    done
-else
-    echo -e "${YELLOW}No GUI software selected for installation using Brew Cask.${NC}"
-fi
-
-# prompt for npm global packages
-echo -e "${YELLOW}Installing NPM Global Packages.${NC}"
-
-# Check if Node.js is installed
-if ! command -v node &> /dev/null; then
-    echo -e "${RED}Error: Node.js is not installed.${NC}" 
-    exit 1
-fi
-
-# Check if npm is installed
-if ! command -v npm &> /dev/null; then
-    echo -e "${RED}Error: npm is not installed.${NC}"
-    exit 1
-fi
-
-# Function to prompt user for npm package installation
-prompt_install_npm() {
-    local software_name_npm="$1"
-    local choice
-    echo -e -n "${YELLOW}Do you want to install $software_name_npm? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        return 0
-    else
-        return 1
+if [[ ${#install_choices_gui[@]} -gt 0 ]]; then
+  log_info "Installing selected Homebrew casks..."
+  for software_gui in "${install_choices_gui[@]}"; do
+    if ! install_cask "$software_gui"; then
+      record_failure "cask:$software_gui"
     fi
-}
+  done
+else
+  log_info "No Homebrew cask selected."
+fi
 
 software_list_npm=(
-    "nodemon"
-    "typescript"
-    "wrangler"
-    "yarn"
-    "vite"
-    "netlify-cli"
-    "@tunnel/cli"
-    "@vscode/vsce"
-    "create-next-app"
-    "prettier"
-    "@anthropic-ai/claude-code"
+  "nodemon"
+  "typescript"
+  "wrangler"
+  "yarn"
+  "vite"
+  "netlify-cli"
+  "@tunnel/cli"
+  "@vscode/vsce"
+  "create-next-app"
+  "prettier"
+  "@anthropic-ai/claude-code"
 )
 
 install_choices_npm=()
 for software_npm in "${software_list_npm[@]}"; do
-    if prompt_install_npm "$software_npm"; then
-        install_choices_npm+=("$software_npm")
-    else
-        echo -e "${RED}Skipping installation of $software_npm...${NC}"
-    fi
+  if confirm "Do you want to install npm package $software_npm?"; then
+    install_choices_npm+=("$software_npm")
+  else
+    log_warn "Skipping npm package $software_npm."
+  fi
 done
 
-# Perform the selected npm package installations
-if [ ${#install_choices_npm[@]} -gt 0 ]; then
-    echo -e "${GREEN}Installing selected npm packages...${NC}"
+if [[ ${#install_choices_npm[@]} -gt 0 ]]; then
+  if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    log_warn "Node.js/npm not available. Skipping npm package installation."
+    record_failure "npm:node-or-npm-missing"
+  else
+    log_info "Installing selected npm packages..."
     for software_npm in "${install_choices_npm[@]}"; do
-        echo -e "${GREEN}Installing $software_npm...${NC}"
-        if npm install -g "$software_npm"; then
-            echo -e "${GREEN}$software_npm installation successful.${NC}"
-        else
-            echo -e "${RED}Failed to install $software_npm. Exiting.${NC}"
-            exit 1
-        fi
+      if ! install_npm_package "$software_npm"; then
+        record_failure "npm:$software_npm"
+      fi
     done
+  fi
 else
-    echo -e "${YELLOW}No npm packages selected for installation.${NC}"
+  log_info "No npm package selected."
 fi
 
-# Function to install an app from the Mac App Store
-install_app() {
-    local app_name="$1"
-    local app_id="$2"
+mas_apps=(
+  "803453959|Slack"
+  "462062816|Microsoft PowerPoint"
+  "462054704|Microsoft Word"
+  "462058435|Microsoft Excel"
+  "823766827|Microsoft OneDrive"
+  "985367838|Microsoft Outlook"
+  "409183694|Keynote"
+  "409203825|Numbers"
+  "409201541|Pages"
+  "497799835|XCode"
+  "640199958|Apple Developer"
+  "310633997|WhatsApp Messenger"
+  "747648890|Telegram"
+  "1529001798|Hologram Desktop"
+  "1176074088|Termius"
+  "1561788435|Usage"
+  "1440200291|Bitpay"
+  "571213070|Davinci Resolve"
+  "1645016851|Bluebook"
+  "1295203466|Microsoft Remote Desktop"
+)
 
-    echo -e -n "${YELLOW}Do you want to install $app_name from the Mac App Store? (yes/no)${NC} "
-    read -r -n 3 choice
-
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Installing $app_name from the Mac App Store...${NC}"
-
-        # Check if mas (Mac App Store command-line interface) is installed
-        if command -v mas &>/dev/null; then
-            # Install the app
-            mas install "$app_id"
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}$app_name installation successful.${NC}"
-            else
-                echo -e "${RED}Failed to install $app_name. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}mas (Mac App Store command-line interface) is not installed. Please install it first.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping $app_name installation...${NC}"
+if ensure_mas_available && ensure_mas_signed_in; then
+  for app in "${mas_apps[@]}"; do
+    app_id="${app%%|*}"
+    app_name="${app#*|}"
+    if ! install_mas_app "$app_name" "$app_id"; then
+      record_failure "mas:$app_name"
     fi
-}
+  done
+else
+  log_warn "Skipping all Mac App Store app installs."
+fi
 
-# Function to download and install Docker
-install_docker() {
-    local choice
-    echo -e -n "${YELLOW}Do you want to install Docker? (yes/no)${NC} "
-    read -r -n 3 choice
-    if [ "$choice" = "yes" ] || [ "$choice" = "y" ]; then
-        echo -e "${GREEN}Downloading Docker...${NC}"
-        
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partaa
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partab
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partac
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partad
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partae
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partaf
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partag
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partah
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partai
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partaj
-        curl -O https://autosetup.devarshi.dev/mac/softwares/Docker/Docker.zip.partak
+if ! install_docker; then
+  record_failure "cask:docker"
+fi
 
-        if [ -f "Docker.zip.partaa" ] && [ -f "Docker.zip.partab" ] && [ -f "Docker.zip.partac" ] && [ -f "Docker.zip.partad" ] && [ -f "Docker.zip.partae" ] && [ -f "Docker.zip.partaf" ] && [ -f "Docker.zip.partag" ] && [ -f "Docker.zip.partah" ] && [ -f "Docker.zip.partai" ] && [ -f "Docker.zip.partaj" ] && [ -f "Docker.zip.partak" ]; then
-            echo -e "${GREEN}Downloaded Docker parts successfully.${NC}"
+log_info "Clearing local Homebrew cache..."
+if brew cleanup; then
+  log_success "Homebrew cleanup successful."
+else
+  log_warn "brew cleanup failed."
+  record_failure "brew:cleanup"
+fi
 
-            cat Docker.zip.part* > Docker.zip
+if [[ ${#FAILED_ITEMS[@]} -gt 0 ]]; then
+  log_warn "Script completed with some issues:"
+  for item in "${FAILED_ITEMS[@]}"; do
+    log_warn " - $item"
+  done
+  exit 1
+fi
 
-            if [ -f "Docker.zip" ]; then
-                echo -e "${GREEN}Combined Docker parts into a zip file.${NC}"
-
-                unzip Docker.zip
-
-                if [ -f "Docker.dmg" ]; then
-                    echo -e "${GREEN}Docker unzipped successfully.${NC}"
-
-                    echo -e "${YELLOW}Please enter your sudo password to install Docker.${NC}"
-                    sudo hdiutil attach Docker.dmg
-                    sudo cp -R /Volumes/Docker/Docker.app /Applications/
-                    sudo hdiutil detach /Volumes/Docker
-
-                    if [ $? -eq 0 ]; then
-                        echo -e "${GREEN}Docker installed successfully.${NC}"
-
-                        echo -e "${YELLOW}Cleaning up installation files...${NC}"
-                        rm -rf Docker.zip Docker.dmg Docker.zip.part*
-
-                        if [ $? -eq 0 ]; then
-                            echo -e "${GREEN}Cleanup completed.${NC}"
-                        else
-                            echo -e "${RED}Failed to delete installation files.${NC}"
-                        fi
-                    else
-                        echo -e "${RED}Failed to install Docker. Exiting.${NC}"
-                        exit 1
-                    fi
-                else
-                    echo -e "${RED}Failed to unzip Docker. Exiting.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}Failed to combine Docker parts into a zip file. Exiting.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}Failed to download Docker parts. Exiting.${NC}"
-            exit 1
-        fi
-    else
-        echo -e "${RED}Skipping Docker installation...${NC}"
-    fi
-}
-
-
-# Install Slack
-install_app "Slack" 803453959
-
-# Install Microsoft PowerPoint
-install_app "Microsoft PowerPoint" 462062816
-
-# Install Microsoft Word
-install_app "Microsoft Word" 462054704
-
-# Install Microsoft Excel
-install_app "Microsoft Excel" 462058435
-
-# Install Microsoft OneDrive
-install_app "Microsoft OneDrive" 823766827
-
-# Install Microsoft Outlook
-install_app "Microsoft Outlook" 985367838
-
-# Install Keynote
-install_app "Keynote" 409183694
-
-# Install Numbers
-install_app "Numbers" 409203825
-
-# Install Pages
-install_app "Pages" 409201541
-
-# Install XCode
-install_app "XCode" 497799835
-
-# Install Apple Developer
-install_app "Apple Developer" 640199958
-
-# Install WhatsApp Desktop
-install_app "WhatsApp Messenger" 310633997
-
-# Install Telegram
-install_app "Telegram" 747648890
-
-# Install Hologram Desktop
-install_app "Hologram Desktop" 1529001798
-
-# Install Termius
-install_app "Termius" 1176074088
-
-# Install Usage
-install_app "Usage" 1561788435
-
-# Install Bitpay
-install_app "Bitpay" 1440200291
-
-# Install Davinci Resolve
-install_app "Davinci Resolve" 571213070
-
-# Install Bluebook
-install_app "Bluebook" 1645016851
-
-# Install Microsoft Remote Desktop
-install_app "Microsoft Remote Desktop" 1295203466
-
-# Install Docker
-install_docker
-
-#Clear local brew cache
-echo -e "${YELLOW}Clearing local brew cache.${NC}"
-brew cleanup
-echo -e "${GREEN}Successfully cleared local brew cache.${NC}"
-
-echo -e "${GREEN}Installation complete.${NC}"
+log_success "Installation complete."
