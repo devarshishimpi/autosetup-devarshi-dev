@@ -30,7 +30,7 @@ services:
       RESEND_API_KEY: ${POST_DEVARSHI_DEV_RESEND_API_KEY}
       EMAIL_FROM_NAME: ${POST_DEVARSHI_DEV_EMAIL_FROM_NAME}
       EMAIL_FROM_ADDRESS: ${POST_DEVARSHI_DEV_EMAIL_FROM_ADDRESS}
-      
+
     volumes:
       - postiz-config:/config/
       - postiz-uploads:/uploads/
@@ -38,7 +38,7 @@ services:
       - 5000:5000
     networks:
       - postiz
-  
+
   post-devarshi-dev-cloudflared:
     container_name: post-devarshi-dev-cloudflared
     image: cloudflare/cloudflared:latest
@@ -55,7 +55,7 @@ services:
 volumes:
   postiz-config:
     external: false
- 
+
   postiz-uploads:
     external: false
 

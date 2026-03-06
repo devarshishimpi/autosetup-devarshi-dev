@@ -25,6 +25,7 @@ chmod +x setup.sh
 
 > [!NOTE]
 > Environment Variables during setup script example:
+>
 > ```bash
 > MINIO_IP="192.168.1.41"
 > MINIO_ACCESS_KEY="minio"
@@ -34,9 +35,11 @@ chmod +x setup.sh
 
 > [!TIP]
 > Check the systemctl status if the services are running as expected.
+>
 > ```bash
 > sudo systemctl status static-serve
 > ```
+>
 > ```bash
 > sudo systemctl status s3-sync
 > ```

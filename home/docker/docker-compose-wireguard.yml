@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   wg-easy:
     image: ghcr.io/wg-easy/wg-easy:latest
@@ -17,6 +17,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
     ports:
-      - '51820:51820/udp'
-      - '51821:51821/tcp'
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
     restart: always

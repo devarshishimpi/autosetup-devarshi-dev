@@ -15,6 +15,7 @@ A collection of scripts and configurations to automate the setup of development 
 The `mac/macos.sh` script is an all-in-one installer for setting up a fresh macOS machine.
 
 ### Features
+
 - **Homebrew & mas**: Automatically installs Homebrew and Mac App Store CLI.
 - **CLI Tools**: Installs essential developer tools like Node.js, Python, Go, Git, Docker, etc.
 - **GUI Applications**: Installs popular apps via Homebrew Cask (VS Code, Chrome, Spotify, etc.).
@@ -23,13 +24,16 @@ The `mac/macos.sh` script is an all-in-one installer for setting up a fresh macO
 - **Utilities**: `bulk_ssh.sh` allows for opening multiple SSH sessions in separate Terminal tabs.
 
 ### Usage
+
 Run the script from the terminal:
+
 ```bash
 cd mac
 chmod +x macos.sh
 ./macos.sh
 ```
-*Note: You will be prompted for your `sudo` password and installation choices.*
+
+_Note: You will be prompted for your `sudo` password and installation choices._
 
 ---
 
@@ -38,16 +42,19 @@ chmod +x macos.sh
 The `home/` directory contains configurations for self-hosted services and virtual machines.
 
 ### Docker Services (`home/docker/`)
-Ready-to-use `docker-compose` files for various services. 
+
+Ready-to-use `docker-compose` files for various services.
 
 **Available Services:**
+
 - **Productivity & Automation**: `n8n`, `postiz`.
 - **Infrastructure**: `minio-s3` (Object Storage), `wireguard` (VPN), `pihole` (DNS/Adblock).
 - **Monitoring & Tools**: `influx-vmboard`, `networktools`.
 - **Hosting**: `static-cdn`.
 
 **Usage:**
-Navigate to `home/docker` and check for any `.env.example` files to configure your environment variables before running. 
+Navigate to `home/docker` and check for any `.env.example` files to configure your environment variables before running.
+
 > For detailed configuration instructions, specifically for MinIO and Static CDN, please refer to the `home/docker/README.md`.
 
 ```bash
@@ -55,7 +62,9 @@ docker-compose -f <filename>.yml up -d
 ```
 
 ### Virtual Machines (`home/vms/`)
+
 Configurations for Ubuntu 22 Server tailored for:
+
 - `s3-and-db-ubuntu-22-server`
 - `static-cdn-ubuntu-22-server`
 
@@ -70,6 +79,7 @@ The `win/` directory currently contains specific utilities for Windows environme
 ## 🚀 Getting Started
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/devarshishimpi/autosetup-devarshi-dev.git
    cd autosetup-devarshi-dev
@@ -80,4 +90,5 @@ The `win/` directory currently contains specific utilities for Windows environme
 3. Follow the specific instructions for each script or configuration file.
 
 ## ⚠️ Disclaimer
+
 These scripts are customized for personal development workflows. Please review the scripts before running them to ensure they match your requirements.

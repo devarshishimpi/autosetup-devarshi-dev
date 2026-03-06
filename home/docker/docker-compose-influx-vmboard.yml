@@ -17,7 +17,7 @@ services:
     restart: always
     networks:
       - internal
-  
+
   influx-vmboard-dev-cloudflared:
     container_name: influx-vmboard-dev-cloudflared
     image: cloudflare/cloudflared:latest

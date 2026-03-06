@@ -3,7 +3,7 @@ services:
     container_name: minio-s3
     image: minio/minio
     ports:
-      - "9000:9000" 
+      - "9000:9000"
       - "9001:9001"
     volumes:
       - ./minio-storage:/data

@@ -59,13 +59,16 @@ The setup consists of two separate Docker Compose files:
 
 > [!IMPORTANT]
 > **Incase of the following error in cloudflared:**
+>
 > ```
 > failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 2048 kiB, got: 416 kiB). See https://github.com/lucas-clemente/quic-go/wiki/UDP-Receive-Buffer-Size for details.
 > ```
+>
 > **Please run the following commands:**
+>
 > ```bash
 > sysctl -w net.core.rmem_max=7500000
 > sysctl -w net.core.wmem_max=7500000
 > ```
+>
 > Then restart the cloudflared service. [Reference](https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes).
-

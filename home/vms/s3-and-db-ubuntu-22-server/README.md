@@ -64,6 +64,7 @@ chmod +x configure_minio.sh
 
 > [!TIP]
 > Check the systemctl status if the services are running as expected.
+>
 > ```bash
 > sudo systemctl status minio
 > ```
@@ -72,6 +73,7 @@ chmod +x configure_minio.sh
 
 > [!NOTE]
 > The MinIO WebUI Dashboard with have the default credentials.
+>
 > ```
 > username: minioadmin
 > password: minioadmin
@@ -100,6 +102,7 @@ chmod +x configure_minio_cdn_backup.sh
 
 > [!TIP]
 > Check the systemctl status if the services are running as expected.
+>
 > ```bash
 > sudo systemctl status minio-aws-sync
 > ```

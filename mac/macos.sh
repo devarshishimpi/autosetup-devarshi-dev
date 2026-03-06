@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+if [ -z "${BASH_VERSION:-}" ]; then
+  printf 'This script must be run with bash.\n' >&2
+  exit 1
+fi
+
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  printf 'Run this script directly (for example: ./macos.sh), do not source it.\n' >&2
+  return 1 2>/dev/null || exit 1
+fi
+
 set -Eeuo pipefail
 IFS=$'\n\t'
 
@@ -15,6 +25,7 @@ if [[ ! -t 1 ]]; then
   NC=''
 fi
 
+DRY_RUN=false
 FAILED_ITEMS=()
 
 log_info() {
@@ -31,6 +42,53 @@ log_warn() {
 
 log_error() {
   printf '%b%s%b\n' "$RED" "$1" "$NC" >&2
+}
+
+usage() {
+  cat <<'EOF'
+Usage: ./macos.sh [--dry-run|-n] [--help|-h]
+
+Options:
+  -n, --dry-run   Show what would run without making changes
+  -h, --help      Show this help message
+EOF
+}
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -n|--dry-run)
+        DRY_RUN=true
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        log_error "Unknown option: $1"
+        usage
+        exit 1
+        ;;
+    esac
+    shift
+  done
+}
+
+render_command() {
+  printf '%q ' "$@"
+}
+
+run_cmd() {
+  local rendered
+  rendered="$(render_command "$@")"
+  rendered="${rendered% }"
+
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] $rendered"
+    return 0
+  fi
+
+  "$@"
 }
 
 record_failure() {
@@ -58,6 +116,9 @@ confirm() {
 
 require_command() {
   local cmd="$1"
+  if [[ "$DRY_RUN" == true ]]; then
+    return 0
+  fi
   if ! command -v "$cmd" >/dev/null 2>&1; then
     log_error "Missing required command: $cmd"
     exit 1
@@ -68,6 +129,11 @@ append_line_if_missing() {
   local file_path="$1"
   local line="$2"
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] append to $file_path: $line"
+    return 0
+  fi
+
   touch "$file_path"
   if ! grep -Fqx "$line" "$file_path"; then
     printf '%s\n' "$line" >> "$file_path"
@@ -76,6 +142,14 @@ append_line_if_missing() {
 
 install_homebrew() {
   require_command curl
+
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "Installing Homebrew..."
+    log_info '[dry-run] /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    log_info "[dry-run] append brew shellenv to $HOME/.zprofile"
+    log_success "Homebrew installation successful."
+    return 0
+  fi
 
   log_info "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -100,19 +174,29 @@ ensure_homebrew() {
     return 0
   fi
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] Homebrew is not installed. It would be installed now."
+  fi
+
   install_homebrew
 }
 
 install_formula() {
   local formula="$1"
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] brew install $formula"
+    return 0
+  fi
+
+  require_command brew
   if brew list --formula "$formula" >/dev/null 2>&1; then
     log_success "$formula is already installed."
     return 0
   fi
 
   log_info "Installing $formula..."
-  if brew install "$formula"; then
+  if run_cmd brew install "$formula"; then
     log_success "$formula installation successful."
     return 0
   fi
@@ -124,13 +208,19 @@ install_formula() {
 install_cask() {
   local cask="$1"
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] brew install --cask $cask"
+    return 0
+  fi
+
+  require_command brew
   if brew list --cask "$cask" >/dev/null 2>&1; then
     log_success "$cask is already installed."
     return 0
   fi
 
   log_info "Installing $cask..."
-  if brew install --cask "$cask"; then
+  if run_cmd brew install --cask "$cask"; then
     log_success "$cask installation successful."
     return 0
   fi
@@ -142,13 +232,19 @@ install_cask() {
 install_npm_package() {
   local pkg="$1"
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] npm install -g $pkg"
+    return 0
+  fi
+
+  require_command npm
   if npm ls -g --depth=0 "$pkg" >/dev/null 2>&1; then
     log_success "$pkg is already installed globally."
     return 0
   fi
 
   log_info "Installing npm package $pkg..."
-  if npm install -g "$pkg"; then
+  if run_cmd npm install -g "$pkg"; then
     log_success "$pkg installation successful."
     return 0
   fi
@@ -160,13 +256,19 @@ install_npm_package() {
 tap_brew_repo() {
   local tap="$1"
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] brew tap $tap"
+    return 0
+  fi
+
+  require_command brew
   if brew tap | grep -Fxq "$tap"; then
     log_success "$tap is already tapped."
     return 0
   fi
 
   log_info "Tapping $tap..."
-  if brew tap "$tap"; then
+  if run_cmd brew tap "$tap"; then
     log_success "$tap tap successful."
     return 0
   fi
@@ -189,6 +291,11 @@ ensure_mas_available() {
 }
 
 ensure_mas_signed_in() {
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] mas account"
+    return 0
+  fi
+
   if mas account >/dev/null 2>&1; then
     return 0
   fi
@@ -206,13 +313,19 @@ install_mas_app() {
     return 0
   fi
 
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "[dry-run] mas install $app_id # $app_name"
+    return 0
+  fi
+
+  require_command mas
   if mas list | awk '{print $1}' | grep -Fxq "$app_id"; then
     log_success "$app_name is already installed."
     return 0
   fi
 
   log_info "Installing $app_name from the Mac App Store..."
-  if mas install "$app_id"; then
+  if run_cmd mas install "$app_id"; then
     log_success "$app_name installation successful."
     return 0
   fi
@@ -227,22 +340,37 @@ install_docker() {
     return 0
   fi
 
-  require_command curl
-  require_command unzip
-  require_command hdiutil
-
   local docker_base_url="https://autosetup.devarshi.dev/mac/softwares/Docker"
   local parts=(aa ab ac ad ae af ag ah ai aj ak)
   local tmp_dir dmg_path
+
+  if [[ "$DRY_RUN" == true ]]; then
+    log_info "Downloading Docker installer parts..."
+    for part in "${parts[@]}"; do
+      log_info "[dry-run] curl -fL $docker_base_url/Docker.zip.part$part -o <tmp>/Docker.zip.part$part"
+    done
+    log_info "[dry-run] cat <tmp>/Docker.zip.part* > <tmp>/Docker.zip"
+    log_info "[dry-run] unzip -o <tmp>/Docker.zip -d <tmp>"
+    log_info "[dry-run] sudo -v"
+    log_info "[dry-run] hdiutil attach <tmp>/Docker.dmg -nobrowse"
+    log_info "[dry-run] sudo cp -R /Volumes/Docker/Docker.app /Applications/"
+    log_info "[dry-run] hdiutil detach /Volumes/Docker"
+    log_success "Docker install simulation complete."
+    return 0
+  fi
+
+  require_command curl
+  require_command unzip
+  require_command hdiutil
 
   tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/docker-install.XXXXXX")"
   dmg_path="$tmp_dir/Docker.dmg"
 
   log_info "Downloading Docker installer parts..."
   for part in "${parts[@]}"; do
-    if ! curl -fL "$docker_base_url/Docker.zip.part$part" -o "$tmp_dir/Docker.zip.part$part"; then
+    if ! run_cmd curl -fL "$docker_base_url/Docker.zip.part$part" -o "$tmp_dir/Docker.zip.part$part"; then
       log_error "Failed to download Docker.zip.part$part"
-      rm -rf "$tmp_dir"
+      run_cmd rm -rf "$tmp_dir"
       return 1
     fi
   done
@@ -250,50 +378,56 @@ install_docker() {
   log_info "Combining Docker installer parts..."
   if ! cat "$tmp_dir"/Docker.zip.part* > "$tmp_dir/Docker.zip"; then
     log_error "Failed to combine Docker installer parts."
-    rm -rf "$tmp_dir"
+    run_cmd rm -rf "$tmp_dir"
     return 1
   fi
 
   log_info "Extracting Docker installer..."
-  if ! unzip -o "$tmp_dir/Docker.zip" -d "$tmp_dir" >/dev/null; then
+  if ! run_cmd unzip -o "$tmp_dir/Docker.zip" -d "$tmp_dir"; then
     log_error "Failed to unzip Docker installer."
-    rm -rf "$tmp_dir"
+    run_cmd rm -rf "$tmp_dir"
     return 1
   fi
 
   if [[ ! -f "$dmg_path" ]]; then
     log_error "Docker.dmg not found after extraction."
-    rm -rf "$tmp_dir"
+    run_cmd rm -rf "$tmp_dir"
     return 1
   fi
 
   log_info "Mounting Docker image and installing app..."
-  if ! sudo -v; then
+  if ! run_cmd sudo -v; then
     log_error "Failed to acquire sudo access for Docker install."
-    rm -rf "$tmp_dir"
+    run_cmd rm -rf "$tmp_dir"
     return 1
   fi
 
-  if ! hdiutil attach "$dmg_path" -nobrowse >/dev/null; then
+  if ! run_cmd hdiutil attach "$dmg_path" -nobrowse; then
     log_error "Failed to mount Docker.dmg."
-    rm -rf "$tmp_dir"
+    run_cmd rm -rf "$tmp_dir"
     return 1
   fi
 
-  if ! sudo cp -R "/Volumes/Docker/Docker.app" /Applications/; then
+  if ! run_cmd sudo cp -R "/Volumes/Docker/Docker.app" /Applications/; then
     log_error "Failed to copy Docker.app to /Applications."
     hdiutil detach "/Volumes/Docker" >/dev/null 2>&1 || true
-    rm -rf "$tmp_dir"
+    run_cmd rm -rf "$tmp_dir"
     return 1
   fi
 
-  if ! hdiutil detach "/Volumes/Docker" >/dev/null; then
+  if ! run_cmd hdiutil detach "/Volumes/Docker"; then
     log_warn "Docker volume could not be detached automatically."
   fi
 
-  rm -rf "$tmp_dir"
+  run_cmd rm -rf "$tmp_dir"
   log_success "Docker installed successfully."
 }
+
+parse_args "$@"
+
+if [[ "$DRY_RUN" == true ]]; then
+  log_info "Dry-run mode enabled. Commands will be printed but not executed."
+fi
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   log_error "This script is intended for macOS only."
@@ -499,7 +633,10 @@ if ! install_docker; then
 fi
 
 log_info "Clearing local Homebrew cache..."
-if brew cleanup; then
+if [[ "$DRY_RUN" == true ]]; then
+  log_info "[dry-run] brew cleanup"
+  log_success "Homebrew cleanup simulation complete."
+elif run_cmd brew cleanup; then
   log_success "Homebrew cleanup successful."
 else
   log_warn "brew cleanup failed."
