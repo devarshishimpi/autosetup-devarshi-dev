@@ -334,95 +334,6 @@ install_mas_app() {
   return 1
 }
 
-install_docker() {
-  if ! confirm "Do you want to install Docker Desktop?"; then
-    log_warn "Skipping Docker installation."
-    return 0
-  fi
-
-  local docker_base_url="https://autosetup.devarshi.dev/mac/softwares/Docker"
-  local parts=(aa ab ac ad ae af ag ah ai aj ak)
-  local tmp_dir dmg_path
-
-  if [[ "$DRY_RUN" == true ]]; then
-    log_info "Downloading Docker installer parts..."
-    for part in "${parts[@]}"; do
-      log_info "[dry-run] curl -fL $docker_base_url/Docker.zip.part$part -o <tmp>/Docker.zip.part$part"
-    done
-    log_info "[dry-run] cat <tmp>/Docker.zip.part* > <tmp>/Docker.zip"
-    log_info "[dry-run] unzip -o <tmp>/Docker.zip -d <tmp>"
-    log_info "[dry-run] sudo -v"
-    log_info "[dry-run] hdiutil attach <tmp>/Docker.dmg -nobrowse"
-    log_info "[dry-run] sudo cp -R /Volumes/Docker/Docker.app /Applications/"
-    log_info "[dry-run] hdiutil detach /Volumes/Docker"
-    log_success "Docker install simulation complete."
-    return 0
-  fi
-
-  require_command curl
-  require_command unzip
-  require_command hdiutil
-
-  tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/docker-install.XXXXXX")"
-  dmg_path="$tmp_dir/Docker.dmg"
-
-  log_info "Downloading Docker installer parts..."
-  for part in "${parts[@]}"; do
-    if ! run_cmd curl -fL "$docker_base_url/Docker.zip.part$part" -o "$tmp_dir/Docker.zip.part$part"; then
-      log_error "Failed to download Docker.zip.part$part"
-      run_cmd rm -rf "$tmp_dir"
-      return 1
-    fi
-  done
-
-  log_info "Combining Docker installer parts..."
-  if ! cat "$tmp_dir"/Docker.zip.part* > "$tmp_dir/Docker.zip"; then
-    log_error "Failed to combine Docker installer parts."
-    run_cmd rm -rf "$tmp_dir"
-    return 1
-  fi
-
-  log_info "Extracting Docker installer..."
-  if ! run_cmd unzip -o "$tmp_dir/Docker.zip" -d "$tmp_dir"; then
-    log_error "Failed to unzip Docker installer."
-    run_cmd rm -rf "$tmp_dir"
-    return 1
-  fi
-
-  if [[ ! -f "$dmg_path" ]]; then
-    log_error "Docker.dmg not found after extraction."
-    run_cmd rm -rf "$tmp_dir"
-    return 1
-  fi
-
-  log_info "Mounting Docker image and installing app..."
-  if ! run_cmd sudo -v; then
-    log_error "Failed to acquire sudo access for Docker install."
-    run_cmd rm -rf "$tmp_dir"
-    return 1
-  fi
-
-  if ! run_cmd hdiutil attach "$dmg_path" -nobrowse; then
-    log_error "Failed to mount Docker.dmg."
-    run_cmd rm -rf "$tmp_dir"
-    return 1
-  fi
-
-  if ! run_cmd sudo cp -R "/Volumes/Docker/Docker.app" /Applications/; then
-    log_error "Failed to copy Docker.app to /Applications."
-    hdiutil detach "/Volumes/Docker" >/dev/null 2>&1 || true
-    run_cmd rm -rf "$tmp_dir"
-    return 1
-  fi
-
-  if ! run_cmd hdiutil detach "/Volumes/Docker"; then
-    log_warn "Docker volume could not be detached automatically."
-  fi
-
-  run_cmd rm -rf "$tmp_dir"
-  log_success "Docker installed successfully."
-}
-
 parse_args "$@"
 
 if [[ "$DRY_RUN" == true ]]; then
@@ -626,10 +537,6 @@ if ensure_mas_available && ensure_mas_signed_in; then
   done
 else
   log_warn "Skipping all Mac App Store app installs."
-fi
-
-if ! install_docker; then
-  record_failure "cask:docker"
 fi
 
 log_info "Clearing local Homebrew cache..."
